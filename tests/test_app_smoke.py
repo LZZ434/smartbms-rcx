@@ -7,6 +7,17 @@ from streamlit.testing.v1 import AppTest
 APP_PATH = Path(__file__).resolve().parents[1] / "app.py"
 
 
+def _run_page(language: str, page_id: str) -> AppTest:
+    app = AppTest.from_file(APP_PATH, default_timeout=30).run()
+    language_widget = next(item for item in app.radio if item.key == "language")
+    language_widget.set_value(language)
+    app.run()
+    page_widget = next(item for item in app.radio if item.key == "page_id")
+    page_widget.set_value(page_id)
+    app.run()
+    return app
+
+
 class DashboardSmokeTests(unittest.TestCase):
     def test_dashboard_module_imports_and_exposes_six_stable_page_ids(self):
         module = importlib.import_module("app")
@@ -44,6 +55,42 @@ class DashboardSmokeTests(unittest.TestCase):
         source = Path("app.py").read_text(encoding="utf-8")
 
         self.assertNotIn("use_container_width", source)
+
+    def test_all_six_pages_render_in_chinese_and_english(self):
+        expected = {
+            "overview": {"zh": "项目概览", "en": "Overview"},
+            "plant_control": {"zh": "设备与控制", "en": "Plant & Control"},
+            "energy_optimization": {"zh": "能源优化", "en": "Energy Optimization"},
+            "rcx_diagnostics": {"zh": "再调试（RCx）诊断", "en": "RCx Diagnostics"},
+            "bms_points_alarms": {"zh": "BMS 点表与报警", "en": "BMS Points & Alarms"},
+            "learning_lab": {"zh": "学习实验室", "en": "Learning Lab"},
+        }
+        for page_id, labels in expected.items():
+            for language, label in labels.items():
+                with self.subTest(page=page_id, language=language):
+                    app = _run_page(language, page_id)
+                    self.assertFalse(app.exception)
+                    self.assertEqual(app.title[0].value, label)
+
+    def test_chinese_rcx_page_localizes_action_and_tables(self):
+        app = _run_page("zh", "rcx_diagnostics")
+
+        self.assertTrue(any("建议措施" in item.value for item in app.success))
+        self.assertIn("预期故障", app.dataframe[0].value.columns)
+        self.assertIn("建议措施", app.dataframe[1].value.columns)
+
+    def test_report_download_buttons_follow_selected_language(self):
+        chinese = _run_page("zh", "overview")
+        english = _run_page("en", "overview")
+
+        self.assertEqual(
+            [button.proto.label for button in chinese.download_button],
+            ["下载 HTML 技术报告", "下载 Markdown 摘要"],
+        )
+        self.assertEqual(
+            [button.proto.label for button in english.download_button],
+            ["Download HTML technical report", "Download Markdown summary"],
+        )
 
 
 if __name__ == "__main__":

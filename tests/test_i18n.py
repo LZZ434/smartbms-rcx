@@ -10,6 +10,7 @@ from smartbms.i18n import (
     localize_findings_frame,
     localize_frame,
     page_label,
+    report_filename,
     t,
 )
 from smartbms.scenarios import run_portfolio_scenarios
@@ -33,6 +34,12 @@ class TranslationCoreTests(unittest.TestCase):
             self.assertEqual(len(set(labels)), 6)
         self.assertEqual(page_label("overview", "zh"), "项目概览")
         self.assertEqual(page_label("overview", "en"), "Overview")
+
+    def test_report_filenames_identify_the_selected_language(self):
+        self.assertEqual(report_filename("zh", "html"), "smartbms-rcx-report-zh.html")
+        self.assertEqual(report_filename("en", "md"), "smartbms-rcx-report-en.md")
+        with self.assertRaisesRegex(ValueError, "unsupported report format"):
+            report_filename("zh", "pdf")
 
 
 class DomainLocalizationTests(unittest.TestCase):

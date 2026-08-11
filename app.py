@@ -7,13 +7,18 @@ from dataclasses import asdict
 import pandas as pd
 import streamlit as st
 
-from smartbms.diagnostics import findings_to_frame
 from smartbms.i18n import (
     LANGUAGE_NAMES,
     PAGE_IDS,
+    column_label,
+    fault_label,
     format_day,
+    localize_findings_frame,
+    localize_frame,
     page_label,
+    report_filename,
     scenario_label,
+    severity_label,
     t,
 )
 from smartbms.reporting import render_html_report, render_markdown_report
@@ -47,11 +52,17 @@ def _alarms_frame(run: ScenarioRun) -> pd.DataFrame:
     return pd.DataFrame(asdict(alarm) for alarm in run.alarms)
 
 
-def _hidden_fault_labels(categories: tuple[str, ...]) -> dict[str, str]:
+def _hidden_fault_labels(
+    categories: tuple[str, ...], language: str = "en"
+) -> dict[str, str]:
     """Give blind-drill choices unique labels without revealing fault names."""
 
     return {
-        category: f"Evidence set {chr(ord('A') + position)}"
+        category: t(
+            language,
+            "learning.evidence_set",
+            label=chr(ord("A") + position),
+        )
         for position, category in enumerate(categories)
     }
 
@@ -98,14 +109,14 @@ def render_overview(bundle: ScenarioBundle, language: str) -> None:
     left.download_button(
         t(language, "download.html"),
         data=render_html_report(bundle, language=language),
-        file_name=f"smartbms-rcx-report-{language}.html",
+        file_name=report_filename(language, "html"),
         mime="text/html",
         width="stretch",
     )
     right.download_button(
         t(language, "download.markdown"),
         data=render_markdown_report(bundle, language=language),
-        file_name=f"smartbms-rcx-report-{language}.md",
+        file_name=report_filename(language, "md"),
         mime="text/markdown",
         width="stretch",
     )
@@ -163,21 +174,22 @@ def render_plant_control(bundle: ScenarioBundle, language: str) -> None:
 
 
 def render_optimization(bundle: ScenarioBundle, language: str) -> None:
-    st.title("Energy Optimization")
-    st.caption(
-        "Measured from identical deterministic inputs; optimization is a bounded candidate search, not deep learning."
+    _page_header("energy_optimization", "optimization.subtitle", language)
+    st.dataframe(
+        localize_frame(bundle.comparison.round(3), language),
+        hide_index=True,
+        width="stretch",
     )
-    st.dataframe(bundle.comparison.round(3), hide_index=True, width="stretch")
     metrics = bundle.comparison.set_index("scenario")
     left, right = st.columns(2)
     with left:
-        st.subheader("Energy (kWh)")
+        st.subheader(t(language, "optimization.energy"))
         st.bar_chart(metrics[["energy_kwh"]], color="#2a9d8f")
     with right:
-        st.subheader("Peak demand (kW)")
+        st.subheader(t(language, "optimization.peak"))
         st.bar_chart(metrics[["peak_kw"]], color="#176b87")
 
-    st.subheader("Why energy changed")
+    st.subheader(t(language, "optimization.why"))
     comparison = pd.DataFrame(
         {
             "timestamp": bundle.baseline.trends.timestamp,
@@ -187,15 +199,14 @@ def render_optimization(bundle: ScenarioBundle, language: str) -> None:
     ).set_index("timestamp")
     st.line_chart(comparison)
     st.markdown(
-        f"""
-        The optimized controller uses a one-hour weather/occupancy look-ahead, authorized pre-cooling,
-        relaxed unoccupied operation, and a comfort penalty. In this fixed synthetic week it reduces
-        energy by **{metrics.loc['optimized', 'energy_savings_pct']:.3f}%** while keeping all occupied
-        zone-samples inside 22–26 °C. The result is not transferable to a real site without calibration.
-        """
+        t(
+            language,
+            "optimization.explanation",
+            saving=metrics.loc["optimized", "energy_savings_pct"],
+        )
     )
     st.download_button(
-        "Download comparison CSV",
+        t(language, "optimization.download"),
         bundle.comparison.to_csv(index=False).encode("utf-8"),
         "scenario-comparison.csv",
         "text/csv",
@@ -203,23 +214,29 @@ def render_optimization(bundle: ScenarioBundle, language: str) -> None:
 
 
 def render_rcx(bundle: ScenarioBundle, language: str) -> None:
-    st.title("RCx Diagnostics")
-    st.caption("Four-sample persistence, explicit evidence, and corrective action.")
-    st.dataframe(bundle.diagnostic_scorecard, hide_index=True, width="stretch")
+    _page_header("rcx_diagnostics", "rcx.subtitle", language)
+    st.dataframe(
+        localize_frame(bundle.diagnostic_scorecard, language),
+        hide_index=True,
+        width="stretch",
+    )
     category = st.selectbox(
-        "Injected fault",
+        t(language, "rcx.injected_fault"),
         list(bundle.fault_runs),
-        format_func=lambda value: value.replace("_", " ").title(),
+        format_func=lambda value: fault_label(value, language),
+        key="rcx_fault",
     )
     run = bundle.fault_runs[category]
-    finding_frame = findings_to_frame(list(run.findings))
+    finding_frame = localize_findings_frame(run.findings, language)
     st.dataframe(finding_frame, hide_index=True, width="stretch")
     finding = next(item for item in run.findings if item.category == category)
+    localized_finding = localize_findings_frame([finding], language).iloc[0]
+    recommendation = localized_finding[column_label("recommendation", language)]
     c1, c2, c3 = st.columns(3)
-    c1.metric("Severity", finding.severity.title())
-    c2.metric("Confidence", f"{finding.confidence:.0%}")
-    c3.metric("Estimated impact", f"{finding.estimated_waste_kwh:.2f} kWh")
-    st.success(f"Recommended action: {finding.recommendation}")
+    c1.metric(t(language, "rcx.severity"), severity_label(finding.severity, language))
+    c2.metric(t(language, "rcx.confidence"), f"{finding.confidence:.0%}")
+    c3.metric(t(language, "rcx.impact"), f"{finding.estimated_waste_kwh:.2f} kWh")
+    st.success(t(language, "rcx.action", recommendation=recommendation))
 
     active = run.trends.loc[run.trends.fault_active]
     padding = pd.Timedelta(hours=2)
@@ -228,83 +245,80 @@ def render_rcx(bundle: ScenarioBundle, language: str) -> None:
         & (run.trends.timestamp <= active.timestamp.max() + padding)
     ]
     numeric_evidence = [column for column in finding.evidence_columns if column in view and pd.api.types.is_numeric_dtype(view[column])]
-    st.subheader("Evidence around the injected window")
+    st.subheader(t(language, "rcx.evidence"))
     st.line_chart(view.set_index("timestamp")[numeric_evidence])
-    st.caption(f"Fault active: {active.timestamp.min()} to {active.timestamp.max()} · detected: {finding.detected_at}")
+    st.caption(
+        t(
+            language,
+            "rcx.window",
+            start=active.timestamp.min(),
+            end=active.timestamp.max(),
+            detected=finding.detected_at,
+        )
+    )
 
 
 def render_points_alarms(bundle: ScenarioBundle, language: str) -> None:
-    st.title("BMS Points & Alarms")
-    st.caption(
-        "Simulated protocol semantics for interview discussion—no BACnet/Modbus client is connected."
-    )
+    _page_header("bms_points_alarms", "points.subtitle", language)
     equipment = st.multiselect(
-        "Equipment filter",
+        t(language, "points.equipment_filter"),
         sorted(bundle.point_registry.equipment.unique()),
         default=sorted(bundle.point_registry.equipment.unique()),
+        key="points_equipment",
     )
     points = bundle.point_registry.loc[bundle.point_registry.equipment.isin(equipment)]
-    st.dataframe(points, hide_index=True, width="stretch")
+    st.dataframe(localize_frame(points, language), hide_index=True, width="stretch")
     st.download_button(
-        "Download point registry",
+        t(language, "points.download"),
         points.to_csv(index=False).encode("utf-8"),
         "bms-point-registry.csv",
         "text/csv",
     )
 
-    st.subheader("Alarm event explorer")
+    st.subheader(t(language, "points.alarms"))
     scenarios = _scenario_map(bundle)
-    selected = st.selectbox("Alarm scenario", list(scenarios), index=2)
+    selected = st.selectbox(
+        t(language, "points.alarm_scenario"),
+        list(scenarios),
+        index=2,
+        format_func=lambda value: scenario_label(value, language),
+        key="alarm_scenario",
+    )
     alarms = _alarms_frame(scenarios[selected])
     priorities = sorted(alarms.priority.unique()) if not alarms.empty else []
-    selected_priorities = st.multiselect("Priority", priorities, default=priorities)
+    selected_priorities = st.multiselect(
+        t(language, "points.priority"),
+        priorities,
+        default=priorities,
+        key="alarm_priority",
+    )
     filtered = alarms.loc[alarms.priority.isin(selected_priorities)] if priorities else alarms
-    st.dataframe(filtered.head(500), hide_index=True, width="stretch")
+    st.dataframe(
+        localize_frame(filtered.head(500), language),
+        hide_index=True,
+        width="stretch",
+    )
 
 
 def render_learning_lab(bundle: ScenarioBundle, language: str) -> None:
-    st.title("Learning Lab")
-    st.caption(
-        "Use five guided experiments to turn generated code into your own engineering knowledge."
-    )
-    experiments = (
-        (
-            "1 · Verify the fan cubic law",
-            "Open Plant & Control, compare airflow and fan power, then calculate whether doubling airflow can approach eight times the variable fan power.",
-        ),
-        (
-            "2 · Explain the baseline comfort gap",
-            "Find the first occupied hour. Explain thermal inertia and why a schedule-only controller starts cooling later than the predictive controller.",
-        ),
-        (
-            "3 · Audit the savings claim",
-            "Download both trend CSVs and recompute Σ(power × 0.25 h). Confirm the 5.623% result before using it on a résumé.",
-        ),
-        (
-            "4 · Diagnose one fault blind",
-            "Hide the fault name, inspect command/feedback/power trends, state a hypothesis, evidence, and maintenance test, then compare with the finding.",
-        ),
-        (
-            "5 · Map a point end to end",
-            "Pick ZN-E-T or VLV-E-FBK, trace engineering unit, BACnet object, Modbus register, alarm rule, trend column, and dashboard use.",
-        ),
-    )
-    for title, instructions in experiments:
-        with st.expander(title):
-            st.write(instructions)
+    _page_header("learning_lab", "learning.subtitle", language)
+    for position in range(1, 6):
+        with st.expander(t(language, f"learning.experiment.{position}.title")):
+            st.write(t(language, f"learning.experiment.{position}.text"))
 
-    st.subheader("Blind fault drill")
+    st.subheader(t(language, "learning.blind"))
     categories = tuple(bundle.fault_runs)
-    hidden_labels = _hidden_fault_labels(categories)
+    hidden_labels = _hidden_fault_labels(categories, language)
     category = st.selectbox(
-        "Select evidence set",
+        t(language, "learning.select_set"),
         categories,
         format_func=hidden_labels.__getitem__,
+        key="learning_evidence_set",
     )
     run = bundle.fault_runs[category]
     active = run.trends.loc[run.trends.fault_active]
     signals = st.multiselect(
-        "Signals",
+        t(language, "learning.signals"),
         [
             "east_temp_measured_c",
             "east_temp_reference_c",
@@ -317,16 +331,27 @@ def render_learning_lab(bundle: ScenarioBundle, language: str) -> None:
             "hvac_power_kw",
         ],
         default=["cooling_cmd_east", "valve_east", "hvac_power_kw"],
+        key="learning_signals",
     )
     window = run.trends.loc[
         (run.trends.timestamp >= active.timestamp.min() - pd.Timedelta(hours=1))
         & (run.trends.timestamp <= active.timestamp.max() + pd.Timedelta(hours=1))
     ]
     st.line_chart(window.set_index("timestamp")[signals])
-    hypothesis = st.text_area("Your hypothesis and next physical test")
-    if st.button("Reveal answer", disabled=not hypothesis.strip()):
+    hypothesis = st.text_area(
+        t(language, "learning.hypothesis"), key="learning_hypothesis"
+    )
+    if st.button(
+        t(language, "learning.reveal"),
+        disabled=not hypothesis.strip(),
+        key="learning_reveal",
+    ):
         finding = next(item for item in run.findings if item.category == category)
-        st.info(f"{finding.title}: {finding.evidence}. {finding.recommendation}")
+        localized = localize_findings_frame([finding], language).iloc[0]
+        title = localized[column_label("title", language)]
+        evidence = localized[column_label("evidence", language)]
+        recommendation = localized[column_label("recommendation", language)]
+        st.info(f"{title}: {evidence}. {recommendation}")
 
 
 def main() -> None:
