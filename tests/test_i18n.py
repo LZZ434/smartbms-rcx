@@ -1,12 +1,18 @@
+import re
 import unittest
 
 from smartbms.i18n import (
     LANGUAGE_NAMES,
     PAGE_IDS,
     TRANSLATIONS,
+    format_day,
+    localize_alarm_message,
+    localize_findings_frame,
+    localize_frame,
     page_label,
     t,
 )
+from smartbms.scenarios import run_portfolio_scenarios
 
 
 class TranslationCoreTests(unittest.TestCase):
@@ -27,6 +33,43 @@ class TranslationCoreTests(unittest.TestCase):
             self.assertEqual(len(set(labels)), 6)
         self.assertEqual(page_label("overview", "zh"), "项目概览")
         self.assertEqual(page_label("overview", "en"), "Overview")
+
+
+class DomainLocalizationTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.bundle = run_portfolio_scenarios()
+
+    def test_all_four_findings_localize_without_losing_numbers(self):
+        for category, run in self.bundle.fault_runs.items():
+            with self.subTest(category=category):
+                finding = next(item for item in run.findings if item.category == category)
+                frame = localize_findings_frame([finding], "zh")
+                rendered = " ".join(str(value) for value in frame.iloc[0])
+
+                self.assertIn("建议措施", frame.columns)
+                self.assertNotIn(finding.recommendation, rendered)
+                for number in re.findall(r"[-+]?\d+(?:\.\d+)?", finding.evidence):
+                    self.assertIn(number, rendered)
+
+    def test_display_frame_is_localized_without_mutating_source(self):
+        source = self.bundle.comparison.copy(deep=True)
+        original_columns = list(source.columns)
+        localized = localize_frame(source, "zh")
+
+        self.assertIn("场景", localized.columns)
+        self.assertEqual(localized.iloc[0]["场景"], "基线控制")
+        self.assertEqual(list(source.columns), original_columns)
+        self.assertEqual(source.iloc[0]["scenario"], "baseline")
+
+    def test_known_alarm_messages_and_day_labels_are_bilingual(self):
+        self.assertEqual(
+            localize_alarm_message("High zone temperature", "zh"),
+            "区域温度过高",
+        )
+        day = self.bundle.baseline.trends.timestamp.dt.date.iloc[0]
+        self.assertRegex(format_day(day, "zh"), r"\d+月\d+日")
+        self.assertIn(day.strftime("%b"), format_day(day, "en"))
 
 
 if __name__ == "__main__":
