@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import asdict, dataclass
 
+import numpy as np
 import pandas as pd
 
 from smartbms.config import TariffConfig
@@ -42,9 +43,19 @@ def calculate_metrics(
         raise ValueError(f"metric trends are missing columns: {sorted(missing)}")
     if timestep_minutes <= 0:
         raise ValueError("timestep_minutes must be positive")
+    numeric_columns = [
+        "hvac_power_kw",
+        "east_temp_true_c",
+        "west_temp_true_c",
+    ]
+    numeric = trends[numeric_columns].apply(pd.to_numeric, errors="coerce")
+    if not np.isfinite(numeric.to_numpy(dtype=float)).all():
+        raise ValueError("metric trends contain non-finite values")
+    if (numeric["hvac_power_kw"] < 0).any():
+        raise ValueError("hvac_power_kw must be non-negative")
     rates = tariff or TariffConfig()
     dt_hours = timestep_minutes / 60.0
-    power = trends["hvac_power_kw"].clip(lower=0)
+    power = numeric["hvac_power_kw"]
     energy_kwh = float(power.sum()) * dt_hours
     peak_kw = float(power.max()) if len(power) else 0.0
     runtime_hours = float((power > 0.5).sum()) * dt_hours

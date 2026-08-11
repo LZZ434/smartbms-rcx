@@ -73,6 +73,30 @@ class TwoZonePlantTests(unittest.TestCase):
         self.assertAlmostEqual(snapshot.airflow_east, 0.5)
         self.assertGreater(snapshot.cooling_west_kw, snapshot.cooling_east_kw)
 
+    def test_non_finite_heat_gain_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "internal_gains_kw"):
+            TwoZonePlant(self.config).step(
+                30,
+                (float("nan"), 5),
+                (1, 1),
+                (0.5, 0.5),
+                (0.6, 0.6),
+            )
+
+    def test_positive_fan_command_respects_plant_minimum_airflow(self):
+        snapshot = TwoZonePlant(self.config).step(
+            30,
+            (0, 0),
+            (0, 0),
+            (0, 0),
+            (0.01, 0.01),
+        )
+
+        self.assertEqual(
+            snapshot.airflow_east,
+            self.config.plant.minimum_airflow_fraction,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

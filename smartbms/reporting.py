@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import asdict
-from html import escape
 import json
 from pathlib import Path
 
@@ -196,7 +195,7 @@ def export_portfolio(bundle: ScenarioBundle, output_dir: Path | str) -> list[Pat
         "project": "SmartBMS-RCx",
         "version": "0.1.0",
         "data_classification": "synthetic",
-        "deterministic_seed": 20260803,
+        "deterministic_seed": bundle.baseline.trends.attrs.get("seed"),
         "files": sorted(path.name for path in paths) + ["manifest.json"],
         "disclosure": "Synthetic simulation; not measured building performance.",
     }

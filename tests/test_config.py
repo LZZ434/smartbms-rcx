@@ -50,6 +50,12 @@ class EngineeringConfigTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "multiplier"):
             FaultConfig(fouled_airflow_multiplier=1.2)
 
+    def test_fault_bias_and_prediction_horizon_must_be_finite_positive_values(self):
+        with self.assertRaisesRegex(ValueError, "sensor_bias_c"):
+            FaultConfig(sensor_bias_c=float("nan"))
+        with self.assertRaisesRegex(ValueError, "pre_cooling_hours"):
+            ControllerConfig(pre_cooling_hours=0)
+
 
 if __name__ == "__main__":
     unittest.main()

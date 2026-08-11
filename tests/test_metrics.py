@@ -51,6 +51,13 @@ class MetricTests(unittest.TestCase):
         self.assertGreater(savings, 0)
         self.assertEqual(set(frame["scenario"]), {"baseline", "optimized"})
 
+    def test_nan_power_is_rejected_instead_of_silently_undercounted(self):
+        trends = sample_trends()
+        trends.loc[1, "hvac_power_kw"] = float("nan")
+
+        with self.assertRaisesRegex(ValueError, "non-finite"):
+            calculate_metrics(trends, scenario="invalid")
+
 
 if __name__ == "__main__":
     unittest.main()

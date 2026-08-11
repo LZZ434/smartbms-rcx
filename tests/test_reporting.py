@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from smartbms.config import ProjectConfig, SimulationConfig
 from smartbms.reporting import export_portfolio
 from smartbms.scenarios import run_portfolio_scenarios
 
@@ -51,6 +52,16 @@ class PortfolioReportingTests(unittest.TestCase):
         self.assertEqual(set(comparison.scenario), {"baseline", "optimized"})
         self.assertEqual(manifest["data_classification"], "synthetic")
         self.assertIn("rcx-report.html", manifest["files"])
+
+    def test_manifest_uses_the_scenario_seed_instead_of_a_hard_coded_value(self):
+        bundle = run_portfolio_scenarios(
+            ProjectConfig(simulation=SimulationConfig(seed=99))
+        )
+        directory = self.output_dir("custom-seed")
+        export_portfolio(bundle, directory)
+        manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(manifest["deterministic_seed"], 99)
 
 
 if __name__ == "__main__":

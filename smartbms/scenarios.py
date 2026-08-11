@@ -67,13 +67,20 @@ def run_scenario(
     if strategy == "baseline":
         controller = BaselineController(config.controller)
     elif strategy == "predictive":
-        controller = PredictiveController(config.controller)
+        controller = PredictiveController(config.controller, config.plant)
     else:
         raise ValueError("strategy must be 'baseline' or 'predictive'")
 
     records: list[dict[str, object]] = []
     alarms: list[AlarmEvent] = []
-    forecast_steps = max(1, round(60 / config.simulation.timestep_minutes))
+    forecast_steps = max(
+        1,
+        round(
+            config.controller.pre_cooling_hours
+            * 60
+            / config.simulation.timestep_minutes
+        ),
+    )
     for position, row in inputs.iterrows():
         timestamp = pd.Timestamp(row["timestamp"])
         active = fault is not None and fault_is_active(fault, timestamp.to_pydatetime())
@@ -193,12 +200,15 @@ def run_scenario(
             "strategy": strategy,
             "disclosure": "Synthetic simulation; not measured building performance.",
             "weather_reference": inputs.attrs["weather_reference"],
+            "seed": config.simulation.seed,
         }
     )
     findings = tuple(
         run_diagnostics(
             trends,
             timestep_minutes=config.simulation.timestep_minutes,
+            nominal_zone_cooling_kw=config.plant.east.max_cooling_kw,
+            nominal_chiller_cop=config.plant.chiller_cop,
         )
     )
     metrics = calculate_metrics(

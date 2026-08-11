@@ -73,6 +73,29 @@ class DiagnosticRuleTests(unittest.TestCase):
         self.assertIn("detected_at", frame.columns)
         self.assertIn("recommendation", frame.columns)
 
+    def test_stuck_valve_impact_uses_configured_nominal_capacity(self):
+        trends = diagnostic_fixture("stuck_valve")
+        low = next(
+            finding
+            for finding in run_diagnostics(
+                trends, nominal_zone_cooling_kw=12
+            )
+            if finding.category == "stuck_valve"
+        )
+        high = next(
+            finding
+            for finding in run_diagnostics(
+                trends, nominal_zone_cooling_kw=24
+            )
+            if finding.category == "stuck_valve"
+        )
+
+        self.assertAlmostEqual(
+            high.estimated_waste_kwh,
+            low.estimated_waste_kwh * 2,
+            delta=0.002,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

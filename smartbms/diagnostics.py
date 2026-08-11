@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from math import isfinite
 
 import numpy as np
 import pandas as pd
@@ -51,6 +52,8 @@ def run_diagnostics(
     *,
     persistence_samples: int = 4,
     timestep_minutes: int = 15,
+    nominal_zone_cooling_kw: float = 24.0,
+    nominal_chiller_cop: float = 3.6,
 ) -> list[DiagnosticFinding]:
     """Run four transparent RCx rules over a trend DataFrame."""
 
@@ -70,6 +73,10 @@ def run_diagnostics(
     _require_columns(trends, required)
     if persistence_samples < 1:
         raise ValueError("persistence_samples must be positive")
+    if not isfinite(nominal_zone_cooling_kw) or nominal_zone_cooling_kw <= 0:
+        raise ValueError("nominal_zone_cooling_kw must be positive and finite")
+    if not isfinite(nominal_chiller_cop) or nominal_chiller_cop <= 0:
+        raise ValueError("nominal_chiller_cop must be positive and finite")
     dt_hours = timestep_minutes / 60.0
     findings: list[DiagnosticFinding] = []
 
@@ -106,7 +113,13 @@ def run_diagnostics(
                 confidence=min(0.99, 0.72 + mean_gap / 2),
                 evidence=f"Valve feedback remained {mean_gap:.2f} fraction below command",
                 evidence_columns=("cooling_cmd_east", "valve_east", "east_temp_measured_c"),
-                estimated_waste_kwh=round(float(valve_gap[valve_mask].sum()) * 18 * dt_hours / 3.6, 3),
+                estimated_waste_kwh=round(
+                    float(valve_gap[valve_mask].sum())
+                    * nominal_zone_cooling_kw
+                    * dt_hours
+                    / nominal_chiller_cop,
+                    3,
+                ),
                 recommendation="Inspect actuator linkage and valve stroke; then command a full open/close functional test.",
             )
         )

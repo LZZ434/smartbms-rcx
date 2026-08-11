@@ -1,7 +1,7 @@
 import math
 import unittest
 
-from smartbms.config import ControllerConfig
+from smartbms.config import ControllerConfig, PlantConfig, ZoneConfig
 from smartbms.controllers import PredictiveController, ZoneObservation
 
 
@@ -39,6 +39,21 @@ class PredictiveControllerTests(unittest.TestCase):
         self.assertTrue(action.fallback_used)
         self.assertEqual(action.strategy, "predictive-fallback")
         self.assertTrue(0 <= action.cooling_east <= 1)
+
+    def test_projected_power_uses_configured_plant_capacity(self):
+        observation = ZoneObservation(27, 27, True, 31, 14)
+        default = PredictiveController(
+            ControllerConfig(), PlantConfig()
+        ).act(observation, occupancy_next_hour=1)
+        low_capacity = PredictiveController(
+            ControllerConfig(),
+            PlantConfig(
+                east=ZoneConfig(name="East", max_cooling_kw=12),
+                west=ZoneConfig(name="West", max_cooling_kw=12),
+            ),
+        ).act(observation, occupancy_next_hour=1)
+
+        self.assertNotEqual(default.projected_power_kw, low_capacity.projected_power_kw)
 
 
 if __name__ == "__main__":

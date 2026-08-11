@@ -49,6 +49,15 @@ def _alarms_frame(run: ScenarioRun) -> pd.DataFrame:
     return pd.DataFrame(asdict(alarm) for alarm in run.alarms)
 
 
+def _hidden_fault_labels(categories: tuple[str, ...]) -> dict[str, str]:
+    """Give blind-drill choices unique labels without revealing fault names."""
+
+    return {
+        category: f"Evidence set {chr(ord('A') + position)}"
+        for position, category in enumerate(categories)
+    }
+
+
 def _page_header(title: str, subtitle: str) -> None:
     st.title(title)
     st.caption(subtitle)
@@ -279,7 +288,13 @@ def render_learning_lab(bundle: ScenarioBundle) -> None:
             st.write(instructions)
 
     st.subheader("Blind fault drill")
-    category = st.selectbox("Select evidence set", list(bundle.fault_runs), format_func=lambda _: "Hidden fault evidence")
+    categories = tuple(bundle.fault_runs)
+    hidden_labels = _hidden_fault_labels(categories)
+    category = st.selectbox(
+        "Select evidence set",
+        categories,
+        format_func=hidden_labels.__getitem__,
+    )
     run = bundle.fault_runs[category]
     active = run.trends.loc[run.trends.fault_active]
     signals = st.multiselect(

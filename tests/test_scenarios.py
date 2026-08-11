@@ -1,7 +1,7 @@
 import unittest
 
-from smartbms.config import ProjectConfig
-from smartbms.scenarios import run_portfolio_scenarios
+from smartbms.config import ControllerConfig, ProjectConfig
+from smartbms.scenarios import run_portfolio_scenarios, run_scenario
 
 
 class PortfolioScenarioTests(unittest.TestCase):
@@ -53,8 +53,32 @@ class PortfolioScenarioTests(unittest.TestCase):
 
     def test_trends_and_point_registry_are_explicitly_synthetic(self):
         self.assertTrue(self.bundle.baseline.trends.attrs["synthetic"])
+        self.assertEqual(
+            self.bundle.baseline.trends.attrs["seed"],
+            self.config.simulation.seed,
+        )
         self.assertIn("bacnet_object_type", self.bundle.point_registry.columns)
         self.assertTrue((self.bundle.point_registry["connection"] == "simulated").all())
+
+    def test_pre_cooling_horizon_changes_when_authorization_begins(self):
+        one_hour = run_scenario(
+            ProjectConfig(controller=ControllerConfig(pre_cooling_hours=1)),
+            name="one-hour",
+            strategy="predictive",
+        )
+        two_hours = run_scenario(
+            ProjectConfig(controller=ControllerConfig(pre_cooling_hours=2)),
+            name="two-hours",
+            strategy="predictive",
+        )
+
+        one_start = one_hour.trends.loc[
+            one_hour.trends.preconditioning_authorized, "timestamp"
+        ].min()
+        two_start = two_hours.trends.loc[
+            two_hours.trends.preconditioning_authorized, "timestamp"
+        ].min()
+        self.assertLess(two_start, one_start)
 
 
 if __name__ == "__main__":

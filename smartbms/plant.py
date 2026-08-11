@@ -74,6 +74,12 @@ class TwoZonePlant:
 
         if not isfinite(outdoor_temp_c):
             raise ValueError("outdoor_temp_c must be finite")
+        for name, values in (
+            ("internal_gains_kw", internal_gains_kw),
+            ("solar_gains_kw", solar_gains_kw),
+        ):
+            if len(values) != 2 or not all(isfinite(float(value)) for value in values):
+                raise ValueError(f"{name} must contain two finite values")
         commands = tuple(_clip_fraction(value) for value in cooling_commands)
         valves = commands if actual_valve_positions is None else tuple(
             _clip_fraction(value) for value in actual_valve_positions
@@ -81,7 +87,14 @@ class TwoZonePlant:
         requested_airflow = tuple(_clip_fraction(value) for value in airflow_commands)
         multipliers = tuple(_clip_fraction(value) for value in airflow_multipliers)
         actual_airflow = tuple(
-            _clip_fraction(command * multiplier)
+            0.0
+            if command == 0
+            else _clip_fraction(
+                max(
+                    self.config.plant.minimum_airflow_fraction,
+                    command * multiplier,
+                )
+            )
             for command, multiplier in zip(requested_airflow, multipliers, strict=True)
         )
         if not isfinite(fan_power_multiplier) or fan_power_multiplier <= 0:

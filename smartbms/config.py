@@ -112,6 +112,7 @@ class ControllerConfig:
         for name in ("energy_weight", "peak_weight", "comfort_weight"):
             if getattr(self, name) < 0:
                 raise ValueError(f"{name} must be non-negative")
+        _positive("pre_cooling_hours", self.pre_cooling_hours)
         _positive("peak_target_kw", self.peak_target_kw)
 
 
@@ -126,8 +127,8 @@ class FaultConfig:
     after_hours_command: float = 0.65
 
     def __post_init__(self) -> None:
-        if self.sensor_bias_c == 0:
-            raise ValueError("sensor_bias_c must be non-zero")
+        if not isfinite(self.sensor_bias_c) or self.sensor_bias_c == 0:
+            raise ValueError("sensor_bias_c must be finite and non-zero")
         if not 0 <= self.stuck_valve_position <= 1:
             raise ValueError("stuck_valve_position must be between 0 and 1")
         if not 0 < self.fouled_airflow_multiplier < 1:

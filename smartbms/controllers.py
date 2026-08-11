@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, replace
 from math import isfinite
 
-from smartbms.config import ControllerConfig
+from smartbms.config import ControllerConfig, PlantConfig
 
 
 def _clip(value: float) -> float:
@@ -79,8 +79,13 @@ class BaselineController:
 class PredictiveController:
     """Small explainable candidate search, not a learned model or full MPC."""
 
-    def __init__(self, config: ControllerConfig) -> None:
+    def __init__(
+        self,
+        config: ControllerConfig,
+        plant_config: PlantConfig | None = None,
+    ) -> None:
         self.config = config
+        self.plant_config = plant_config or PlantConfig()
         self._baseline = BaselineController(config)
 
     @staticmethod
@@ -152,9 +157,14 @@ class PredictiveController:
             ) if effective_occupied else self.config.unoccupied_min_airflow
             commands: list[float] = []
             airflows: list[float] = []
+            delivered_cooling: list[float] = []
             predicted_temperatures: list[float] = []
 
-            for temperature in (observation.east_temp_c, observation.west_temp_c):
+            for temperature, zone in zip(
+                (observation.east_temp_c, observation.west_temp_c),
+                (self.plant_config.east, self.plant_config.west),
+                strict=True,
+            ):
                 feedforward = max(0.0, next_outdoor - target) * 0.015
                 pre_cooling = 0.10 * next_occupancy if not observation.occupied else 0.0
                 command = _clip(
@@ -163,20 +173,30 @@ class PredictiveController:
                     + pre_cooling
                 )
                 airflow = _clip(max(minimum_airflow, minimum_airflow + (1 - minimum_airflow) * command))
-                delivered_kw = 24.0 * command * (0.45 + 0.55 * airflow)
+                delivered_kw = zone.max_cooling_kw * command * (0.45 + 0.55 * airflow)
                 internal_kw = 6.0 * max(next_occupancy, 0.2 if observation.occupied else 0.0) + 0.7
                 predicted = temperature + (
-                    (next_outdoor - temperature) / 0.55 + internal_kw - delivered_kw
-                ) / 18.0
+                    (next_outdoor - temperature) / zone.resistance_c_per_kw
+                    + internal_kw
+                    - delivered_kw
+                ) / zone.capacitance_kwh_per_c
                 commands.append(command)
                 airflows.append(airflow)
+                delivered_cooling.append(delivered_kw)
                 predicted_temperatures.append(predicted)
 
-            delivered_total = sum(
-                24.0 * command * (0.45 + 0.55 * airflow)
-                for command, airflow in zip(commands, airflows, strict=True)
+            delivered_total = sum(delivered_cooling)
+            average_airflow = sum(airflows) / 2
+            projected_fan_power = 0.0
+            if average_airflow > 0:
+                projected_fan_power = (
+                    self.plant_config.fan_idle_kw
+                    + self.plant_config.rated_fan_kw * average_airflow**3
+                )
+            projected_power = (
+                delivered_total / self.plant_config.chiller_cop
+                + projected_fan_power
             )
-            projected_power = delivered_total / 3.6 + 5.5 * (sum(airflows) / 2) ** 3
             if effective_occupied:
                 comfort_violation = sum(
                     max(0.0, predicted - self.config.comfort_max_c)
