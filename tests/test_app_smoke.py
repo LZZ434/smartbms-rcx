@@ -1,4 +1,5 @@
 import importlib
+from pathlib import Path
 import unittest
 
 
@@ -16,6 +17,11 @@ class DashboardSmokeTests(unittest.TestCase):
         )
         self.assertEqual(len(set(labels.values())), 4)
         self.assertFalse(any(category in labels[category] for category in labels))
+
+    def test_dashboard_avoids_removed_streamlit_width_api(self):
+        source = Path("app.py").read_text(encoding="utf-8")
+
+        self.assertNotIn("use_container_width", source)
 
 
 if __name__ == "__main__":

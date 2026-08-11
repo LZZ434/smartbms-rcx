@@ -105,14 +105,14 @@ def render_overview(bundle: ScenarioBundle) -> None:
         data=render_html_report(bundle),
         file_name="smartbms-rcx-report.html",
         mime="text/html",
-        use_container_width=True,
+        width="stretch",
     )
     right.download_button(
         "Download Markdown summary",
         data=render_markdown_report(bundle),
         file_name="smartbms-rcx-report.md",
         mime="text/markdown",
-        use_container_width=True,
+        width="stretch",
     )
 
 
@@ -165,7 +165,7 @@ def render_optimization(bundle: ScenarioBundle) -> None:
         "Energy Optimization",
         "Measured from identical deterministic inputs; optimization is a bounded candidate search, not deep learning.",
     )
-    st.dataframe(bundle.comparison.round(3), hide_index=True, use_container_width=True)
+    st.dataframe(bundle.comparison.round(3), hide_index=True, width="stretch")
     metrics = bundle.comparison.set_index("scenario")
     left, right = st.columns(2)
     with left:
@@ -202,7 +202,7 @@ def render_optimization(bundle: ScenarioBundle) -> None:
 
 def render_rcx(bundle: ScenarioBundle) -> None:
     _page_header("RCx Diagnostics", "Four-sample persistence, explicit evidence, and corrective action.")
-    st.dataframe(bundle.diagnostic_scorecard, hide_index=True, use_container_width=True)
+    st.dataframe(bundle.diagnostic_scorecard, hide_index=True, width="stretch")
     category = st.selectbox(
         "Injected fault",
         list(bundle.fault_runs),
@@ -210,7 +210,7 @@ def render_rcx(bundle: ScenarioBundle) -> None:
     )
     run = bundle.fault_runs[category]
     finding_frame = findings_to_frame(list(run.findings))
-    st.dataframe(finding_frame, hide_index=True, use_container_width=True)
+    st.dataframe(finding_frame, hide_index=True, width="stretch")
     finding = next(item for item in run.findings if item.category == category)
     c1, c2, c3 = st.columns(3)
     c1.metric("Severity", finding.severity.title())
@@ -241,7 +241,7 @@ def render_points_alarms(bundle: ScenarioBundle) -> None:
         default=sorted(bundle.point_registry.equipment.unique()),
     )
     points = bundle.point_registry.loc[bundle.point_registry.equipment.isin(equipment)]
-    st.dataframe(points, hide_index=True, use_container_width=True)
+    st.dataframe(points, hide_index=True, width="stretch")
     st.download_button(
         "Download point registry",
         points.to_csv(index=False).encode("utf-8"),
@@ -256,7 +256,7 @@ def render_points_alarms(bundle: ScenarioBundle) -> None:
     priorities = sorted(alarms.priority.unique()) if not alarms.empty else []
     selected_priorities = st.multiselect("Priority", priorities, default=priorities)
     filtered = alarms.loc[alarms.priority.isin(selected_priorities)] if priorities else alarms
-    st.dataframe(filtered.head(500), hide_index=True, use_container_width=True)
+    st.dataframe(filtered.head(500), hide_index=True, width="stretch")
 
 
 def render_learning_lab(bundle: ScenarioBundle) -> None:

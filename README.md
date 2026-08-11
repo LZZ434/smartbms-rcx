@@ -97,7 +97,7 @@ smartbms/
   scenarios.py      end-to-end scenario orchestration
   reporting.py      HTML, Markdown, CSV, and manifest exports
 app.py               six-page Streamlit interface
-tests/               53 unit/integration/smoke tests
+tests/               54 unit/integration/smoke tests
 docs/                design, architecture, learning, résumé, and interview assets
 scripts/             one-command portfolio export
 ```

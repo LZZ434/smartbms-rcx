@@ -20,7 +20,7 @@ Run the acceptance commands once:
 .\.venv\Scripts\python.exe -m streamlit run app.py
 ```
 
-Save the outputs. Your reference baseline is 53 passing tests, 5.623% simulated energy saving, 100% optimized occupied comfort, and 4/4 faults detected at 45 minutes.
+Save the outputs. Your reference baseline is 54 passing tests, 5.623% simulated energy saving, 100% optimized occupied comfort, and 4/4 faults detected at 45 minutes.
 
 ## Week 1 — Understand the plant and baseline
 

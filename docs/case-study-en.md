@@ -24,7 +24,7 @@ Can an explainable predictive supervisor reduce simulated HVAC energy without sa
 
 For the fixed synthetic week, baseline energy was 844.288 kWh and predictive-supervisor energy was 796.814 kWh, a 5.623% reduction. Peak demand changed from 18.646 to 18.507 kW. Occupied comfort inside 22–26 °C improved from 86.889% to 100.000%, while discomfort degree-hours decreased from 6.253 to zero.
 
-All four injected faults were detected at the fourth persistent 15-minute sample: 4/4 recall, 45-minute delay, and no unexpected findings in the fixed scenario suite. The repository contains 53 passing unit, integration, export, and dashboard-smoke tests.
+All four injected faults were detected at the fourth persistent 15-minute sample: 4/4 recall, 45-minute delay, and no unexpected findings in the fixed scenario suite. The repository contains 54 passing unit, integration, export, and dashboard-smoke tests.
 
 ## Interpretation
 

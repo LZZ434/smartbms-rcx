@@ -80,7 +80,7 @@ smartbms/metrics.py      能耗/峰值/舒适度/费用
 smartbms/scenarios.py    全场景编排
 smartbms/reporting.py    报告与 CSV 导出
 app.py                   六页 Streamlit 前端
-tests/                   53 个自动化测试
+tests/                   54 个自动化测试
 ```
 
 ## 结果复算
