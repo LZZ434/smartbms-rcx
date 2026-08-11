@@ -138,9 +138,9 @@ class PredictiveController:
         next_occupancy = _clip(occupancy_next_hour)
 
         if observation.occupied:
-            targets = (24.5, 25.0, 25.5, self.config.comfort_max_c)
+            targets = (23.8, 24.0, 24.2)
         elif next_occupancy >= 0.15:
-            targets = (24.5, 25.0, 25.5, self.config.comfort_max_c)
+            targets = (23.8, 24.0, 24.2)
         else:
             targets = (self.config.unoccupied_setback_c, 29.0, 30.0)
 
@@ -163,7 +163,7 @@ class PredictiveController:
                     + pre_cooling
                 )
                 airflow = _clip(max(minimum_airflow, minimum_airflow + (1 - minimum_airflow) * command))
-                delivered_kw = 18.0 * command * (0.45 + 0.55 * airflow)
+                delivered_kw = 24.0 * command * (0.45 + 0.55 * airflow)
                 internal_kw = 6.0 * max(next_occupancy, 0.2 if observation.occupied else 0.0) + 0.7
                 predicted = temperature + (
                     (next_outdoor - temperature) / 0.55 + internal_kw - delivered_kw
@@ -173,7 +173,7 @@ class PredictiveController:
                 predicted_temperatures.append(predicted)
 
             delivered_total = sum(
-                18.0 * command * (0.45 + 0.55 * airflow)
+                24.0 * command * (0.45 + 0.55 * airflow)
                 for command, airflow in zip(commands, airflows, strict=True)
             )
             projected_power = delivered_total / 3.6 + 5.5 * (sum(airflows) / 2) ** 3

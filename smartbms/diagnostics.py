@@ -136,8 +136,20 @@ def run_diagnostics(
             )
         )
 
-    average_command = (trends["cooling_cmd_east"] + trends.get("cooling_cmd_west", trends["cooling_cmd_east"])) / 2
-    after_hours_mask = (~trends["occupied"].astype(bool)) & (average_command > 0.35) & (trends["hvac_power_kw"] > 1.5)
+    west_command = trends.get("cooling_cmd_west", trends["cooling_cmd_east"])
+    authorized_preconditioning = trends.get(
+        "preconditioning_authorized",
+        pd.Series(False, index=trends.index),
+    ).astype(bool)
+    largest_command = pd.concat(
+        [trends["cooling_cmd_east"], west_command], axis=1
+    ).max(axis=1)
+    after_hours_mask = (
+        (~trends["occupied"].astype(bool))
+        & (~authorized_preconditioning)
+        & (largest_command > 0.55)
+        & (trends["hvac_power_kw"] > 1.5)
+    )
     position = _first_persistent_position(after_hours_mask, persistence_samples)
     if position is not None:
         waste = float(trends.loc[after_hours_mask, "hvac_power_kw"].sum()) * dt_hours

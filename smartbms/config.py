@@ -47,7 +47,7 @@ class ZoneConfig:
     name: str = "Zone"
     resistance_c_per_kw: float = 0.55
     capacitance_kwh_per_c: float = 18.0
-    max_cooling_kw: float = 18.0
+    max_cooling_kw: float = 24.0
     initial_temp_c: float = 27.0
 
     def __post_init__(self) -> None:
