@@ -32,7 +32,7 @@
 - 你理解冷机 COP、风机三次方律和 kW/kWh/°C·h 等工程单位。
 - 你能把故障注入、趋势证据、持续性判断、严重度、影响估计和维修建议串成 RCx 闭环。
 - 你能设计 19 个模拟 BMS 点位的 BACnet 对象、Modbus 寄存器和报警语义。
-- 你能运行六页 Streamlit 仪表盘，并导出 HTML、Markdown、CSV 和清单文件。
+- 你能运行默认中文、可切换 English 的六页 Streamlit 仪表盘，并导出跟随当前语言的 HTML/Markdown 报告、原始 CSV 和清单文件。
 
 它不能证明你做过真实现场调试、BACnet 联调或实际节能量测。面试时主动说清边界，反而更专业。
 
@@ -48,6 +48,8 @@ python -m venv .venv
 ```
 
 浏览器未自动打开时访问 `http://localhost:8501`。
+
+仪表盘默认显示中文。使用侧边栏顶部的 `语言 / Language` 可切换整个界面；HTML 和 Markdown 下载文件会分别使用 `-zh` 或 `-en` 文件名。为便于 Python、Excel 和真实 BMS 数据对接，原始 CSV 字段名保持英文。
 
 生成报告和全部 CSV：
 
@@ -78,9 +80,10 @@ smartbms/points.py       BMS 点表和报警
 smartbms/diagnostics.py  RCx 持续性诊断
 smartbms/metrics.py      能耗/峰值/舒适度/费用
 smartbms/scenarios.py    全场景编排
+smartbms/i18n.py         中英文界面与工程展示翻译
 smartbms/reporting.py    报告与 CSV 导出
 app.py                   六页 Streamlit 前端
-tests/                   54 个自动化测试
+tests/                   68 个自动化测试
 ```
 
 ## 结果复算

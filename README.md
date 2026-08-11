@@ -32,8 +32,8 @@ These values are automatically calculated from interval trends and tested in `te
 - Simplified chiller COP and cubic fan-power behavior with explicit engineering units.
 - Four deterministic fault modes and persistent RCx rules with evidence, severity, impact estimate, and corrective action.
 - A 19-point simulated BMS registry with BACnet object and Modbus register metadata, plus alarm semantics.
-- Six Streamlit pages: overview, plant/control, optimization, RCx, points/alarms, and a guided Learning Lab.
-- Reproducible HTML/Markdown reports and CSV exports driven by the same domain APIs as the tests and dashboard.
+- Six bilingual Streamlit pages: overview, plant/control, optimization, RCx, points/alarms, and a guided Learning Lab. The app defaults to Chinese and switches to English from the sidebar.
+- Reproducible Chinese/English HTML and Markdown downloads plus canonical CSV exports, all driven by the same domain APIs as the tests and dashboard.
 
 ## Quick start
 
@@ -49,6 +49,8 @@ python -m venv .venv
 ```
 
 Open `http://localhost:8501` if the browser does not open automatically.
+
+The dashboard opens in Chinese. Use `语言 / Language` at the top of the sidebar to switch the entire interface to English. HTML and Markdown downloads follow the active language and use `-zh` or `-en` in their filenames; raw CSV field names stay in English as stable engineering interfaces.
 
 Generate the technical report and all CSVs:
 
@@ -95,9 +97,10 @@ smartbms/
   diagnostics.py    persistent RCx findings
   metrics.py        auditable KPI calculations
   scenarios.py      end-to-end scenario orchestration
+  i18n.py           Chinese/English UI and engineering-display localization
   reporting.py      HTML, Markdown, CSV, and manifest exports
 app.py               six-page Streamlit interface
-tests/               54 unit/integration/smoke tests
+tests/               68 unit/integration/smoke tests
 docs/                design, architecture, learning, résumé, and interview assets
 scripts/             one-command portfolio export
 ```

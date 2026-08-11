@@ -56,6 +56,20 @@ class DashboardSmokeTests(unittest.TestCase):
 
         self.assertNotIn("use_container_width", source)
 
+    def test_user_facing_sources_have_no_known_mojibake(self):
+        sources = "\n".join(
+            Path(path).read_text(encoding="utf-8")
+            for path in (
+                "app.py",
+                "smartbms/i18n.py",
+                "smartbms/reporting.py",
+                "smartbms/points.py",
+            )
+        )
+
+        for broken in ("鈥", "掳", "馃", "脳", "危", "茅", "攏", "�"):
+            self.assertNotIn(broken, sources)
+
     def test_all_six_pages_render_in_chinese_and_english(self):
         expected = {
             "overview": {"zh": "项目概览", "en": "Overview"},
