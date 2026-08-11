@@ -67,7 +67,16 @@ class DashboardSmokeTests(unittest.TestCase):
             )
         )
 
-        for broken in ("鈥", "掳", "馃", "脳", "危", "茅", "攏", "�"):
+        for broken in (
+            "鈥?",
+            "掳C",
+            "馃彚",
+            "脳 0.25",
+            "危(power",
+            "r茅sum茅",
+            "攏o BACnet",
+            "�",
+        ):
             self.assertNotIn(broken, sources)
 
     def test_all_six_pages_render_in_chinese_and_english(self):

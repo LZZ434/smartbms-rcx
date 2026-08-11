@@ -1,6 +1,8 @@
 import re
 import unittest
 
+import pandas as pd
+
 from smartbms.i18n import (
     LANGUAGE_NAMES,
     PAGE_IDS,
@@ -11,6 +13,7 @@ from smartbms.i18n import (
     localize_frame,
     page_label,
     report_filename,
+    scenario_label,
     t,
 )
 from smartbms.scenarios import run_portfolio_scenarios
@@ -26,6 +29,8 @@ class TranslationCoreTests(unittest.TestCase):
     def test_unsupported_language_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "unsupported language"):
             t("fr", "app.title")
+        with self.assertRaisesRegex(ValueError, "unsupported language"):
+            scenario_label("custom-scenario", "fr")
 
     def test_page_labels_are_unique_in_both_languages(self):
         self.assertEqual(len(PAGE_IDS), 6)
@@ -68,6 +73,14 @@ class DomainLocalizationTests(unittest.TestCase):
         self.assertEqual(localized.iloc[0]["场景"], "基线控制")
         self.assertEqual(list(source.columns), original_columns)
         self.assertEqual(source.iloc[0]["scenario"], "baseline")
+
+    def test_boolean_display_translation_does_not_coerce_unknown_values(self):
+        source = pd.DataFrame({"writable": [True, False, "unknown", None]})
+
+        localized = localize_frame(source, "zh")
+
+        self.assertEqual(localized["可写"].iloc[:3].tolist(), ["是", "否", "unknown"])
+        self.assertTrue(pd.isna(localized["可写"].iloc[3]))
 
     def test_known_alarm_messages_and_day_labels_are_bilingual(self):
         self.assertEqual(

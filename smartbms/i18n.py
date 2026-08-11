@@ -7,6 +7,7 @@ import re
 from string import Formatter
 from typing import Any, Iterable, Literal, Mapping, cast
 
+import numpy as np
 import pandas as pd
 
 from smartbms.diagnostics import DiagnosticFinding, findings_to_frame
@@ -424,12 +425,13 @@ def _domain_label(
 
 
 def scenario_label(value: str, language: str) -> str:
+    selected = _validate_language(language)
     if value in SCENARIO_LABELS:
-        return _domain_label(SCENARIO_LABELS, value, language)
+        return _domain_label(SCENARIO_LABELS, value, selected)
     if value.startswith("fault-"):
         fault = value.removeprefix("fault-")
-        label = fault_label(fault, language)
-        return f"Fault – {label}" if language == "en" else f"故障 – {label}"
+        label = fault_label(fault, selected)
+        return f"Fault – {label}" if selected == "en" else f"故障 – {label}"
     return value
 
 
@@ -519,8 +521,15 @@ def localize_frame(frame: pd.DataFrame, language: str) -> pd.DataFrame:
         )
     for column in ("detected", "writable"):
         if column in localized:
-            labels = {True: "Yes" if selected == "en" else "是", False: "No" if selected == "en" else "否"}
-            localized[column] = localized[column].map(lambda value: labels.get(bool(value), value))
+            labels = {
+                True: "Yes" if selected == "en" else "是",
+                False: "No" if selected == "en" else "否",
+            }
+            localized[column] = localized[column].map(
+                lambda value: labels[bool(value)]
+                if isinstance(value, (bool, np.bool_))
+                else value
+            )
     if "description" in localized and selected == "zh":
         localized["description"] = localized["description"].map(
             lambda value: POINT_DESCRIPTIONS_ZH.get(str(value), value)

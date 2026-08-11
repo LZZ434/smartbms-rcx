@@ -54,11 +54,11 @@ Keep `generated/scenario-comparison.csv` open as arithmetic evidence. Use the de
 
 ### 2:55–3:00｜收尾
 
-“项目有 54 个自动化测试和可复算 CSV。下一步如果拿到真实数据，我会先做数据质量和模型标定，再做只读诊断验证，最后才评估有联锁的控制写入。”
+“项目有 69 个自动化测试和可复算 CSV，包括中英文六页渲染和双语报告测试。下一步如果拿到真实数据，我会先做数据质量和模型标定，再做只读诊断验证，最后才评估有联锁的控制写入。”
 
 ## 45-second English version
 
-“SmartBMS-RCx is an offline synthetic proof of concept for building HVAC controls and retro-commissioning. It connects a two-zone RC thermal model, schedule/P-control baseline, explainable one-hour bounded predictive supervision, four injected faults, simulated BMS point semantics, and a six-page Streamlit dashboard. In the fixed seven-day scenario, energy decreased from 844.288 to 796.814 kilowatt-hours—5.623%—while all occupied zone-samples stayed within 22 to 26 degrees Celsius. All four faults were detected after four persistent samples, or 45 minutes. I treat those as model-specific simulation results, not real-building savings or live BACnet deployment. The repository includes 54 tests and interval CSVs for independent recomputation.”
+“SmartBMS-RCx is an offline synthetic proof of concept for building HVAC controls and retro-commissioning. It connects a two-zone RC thermal model, schedule/P-control baseline, explainable one-hour bounded predictive supervision, four injected faults, simulated BMS point semantics, and a bilingual six-page Streamlit dashboard. In the fixed seven-day scenario, energy decreased from 844.288 to 796.814 kilowatt-hours—5.623%—while all occupied zone-samples stayed within 22 to 26 degrees Celsius. All four faults were detected after four persistent samples, or 45 minutes. I treat those as model-specific simulation results, not real-building savings or live BACnet deployment. The repository includes 69 tests and interval CSVs for independent recomputation.”
 
 ## If the interviewer interrupts
 
