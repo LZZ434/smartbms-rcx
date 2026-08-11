@@ -5,7 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from smartbms.config import ProjectConfig, SimulationConfig
-from smartbms.reporting import export_portfolio
+from smartbms.reporting import export_portfolio, render_html_report, render_markdown_report
 from smartbms.scenarios import run_portfolio_scenarios
 
 
@@ -62,6 +62,29 @@ class PortfolioReportingTests(unittest.TestCase):
         manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
 
         self.assertEqual(manifest["deterministic_seed"], 99)
+
+    def test_dashboard_reports_render_in_both_languages_without_metric_drift(self):
+        savings = self.bundle.comparison.loc[
+            self.bundle.comparison.scenario == "optimized", "energy_savings_pct"
+        ].iloc[0]
+
+        html_zh = render_html_report(self.bundle, language="zh")
+        html_en = render_html_report(self.bundle, language="en")
+        markdown_zh = render_markdown_report(self.bundle, language="zh")
+        markdown_en = render_markdown_report(self.bundle, language="en")
+
+        self.assertIn('<html lang="zh-CN">', html_zh)
+        self.assertIn("技术报告", html_zh)
+        self.assertIn("合成数据声明", markdown_zh)
+        self.assertIn('<html lang="en">', html_en)
+        self.assertIn("Technical Report", html_en)
+        self.assertIn("Synthetic-data disclosure", markdown_en)
+        for report in (html_zh, html_en, markdown_zh, markdown_en):
+            self.assertIn(f"{savings:.3f}%", report)
+
+    def test_report_rejects_unsupported_language(self):
+        with self.assertRaisesRegex(ValueError, "unsupported language"):
+            render_html_report(self.bundle, language="fr")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,13 @@ from pathlib import Path
 import pandas as pd
 
 from smartbms.diagnostics import findings_to_frame
+from smartbms.i18n import (
+    column_label,
+    localize_findings_frame,
+    localize_frame,
+    scenario_label,
+    t,
+)
 from smartbms.scenarios import ScenarioBundle, ScenarioRun
 
 
@@ -60,20 +67,44 @@ def _alarms_frame(bundle: ScenarioBundle) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=columns)
 
 
-def render_html_report(bundle: ScenarioBundle) -> str:
+def _localized_findings_frame(bundle: ScenarioBundle, language: str) -> pd.DataFrame:
+    frames: list[pd.DataFrame] = []
+    scenario_column = column_label("scenario", language)
+    for run in _all_runs(bundle):
+        frame = localize_findings_frame(run.findings, language)
+        if not frame.empty:
+            frame.insert(0, scenario_column, scenario_label(run.name, language))
+            frames.append(frame)
+    if frames:
+        return pd.concat(frames, ignore_index=True)
+    return localize_frame(_findings_frame(bundle), language)
+
+
+def render_html_report(bundle: ScenarioBundle, language: str = "en") -> str:
     """Render a self-contained, escaped technical report."""
 
+    title = t(language, "report.title")
     optimized = bundle.comparison.loc[bundle.comparison["scenario"] == "optimized"].iloc[0]
-    findings = _findings_frame(bundle)
-    comparison_table = bundle.comparison.round(3).to_html(index=False, escape=True, classes="data")
-    scorecard_table = bundle.diagnostic_scorecard.to_html(index=False, escape=True, classes="data")
-    findings_table = findings.to_html(index=False, escape=True, classes="data")
+    comparison_table = localize_frame(bundle.comparison.round(3), language).to_html(
+        index=False, escape=True, classes="data"
+    )
+    scorecard_table = localize_frame(bundle.diagnostic_scorecard, language).to_html(
+        index=False, escape=True, classes="data"
+    )
+    findings_table = _localized_findings_frame(bundle, language).to_html(
+        index=False, escape=True, classes="data"
+    )
+    document_language = "zh-CN" if language == "zh" else "en"
+    boundary_items = "".join(
+        f"<li>{t(language, f'report.boundary.{position}')}</li>"
+        for position in range(1, 5)
+    )
     return f"""<!doctype html>
-<html lang="en">
+<html lang="{document_language}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SmartBMS-RCx Technical Report</title>
+<title>{title}</title>
 <style>
 :root {{ --ink:#132238; --muted:#5d6b7d; --blue:#176b87; --teal:#2a9d8f; --paper:#f4f7fb; --card:#fff; --line:#d9e1eb; }}
 * {{ box-sizing:border-box; }}
@@ -97,65 +128,57 @@ footer {{ color:var(--muted); margin-top:36px; }}
 </style>
 </head>
 <body><main>
-<div class="eyebrow">Synthetic controls engineering proof of concept</div>
-<h1>SmartBMS-RCx Technical Report</h1>
-<p>Two-zone Hong Kong office HVAC simulation, supervisory optimization, BMS semantics, and retro-commissioning diagnostics.</p>
-<div class="notice"><strong>Disclosure:</strong> All weather/load/BMS trends are synthetic. Results are scenario-specific and are not measured building performance, a savings guarantee, or evidence of a live BACnet/Modbus deployment.</div>
+<div class="eyebrow">{t(language, "report.eyebrow")}</div>
+<h1>{title}</h1>
+<p>{t(language, "report.subtitle")}</p>
+<div class="notice"><strong>{t(language, "report.disclosure_label")}:</strong> {t(language, "report.disclosure")}</div>
 <div class="kpis">
-  <div class="kpi"><b>{optimized['energy_savings_pct']:.3f}%</b><span>simulated energy saving</span></div>
-  <div class="kpi"><b>{optimized['peak_reduction_pct']:.3f}%</b><span>simulated peak reduction</span></div>
-  <div class="kpi"><b>{bundle.optimized.metrics.occupied_comfort_pct:.1f}%</b><span>optimized occupied comfort</span></div>
-  <div class="kpi"><b>{int(bundle.diagnostic_scorecard['detected'].sum())}/4</b><span>injected faults detected</span></div>
+  <div class="kpi"><b>{optimized['energy_savings_pct']:.3f}%</b><span>{t(language, "report.kpi.energy")}</span></div>
+  <div class="kpi"><b>{optimized['peak_reduction_pct']:.3f}%</b><span>{t(language, "report.kpi.peak")}</span></div>
+  <div class="kpi"><b>{bundle.optimized.metrics.occupied_comfort_pct:.1f}%</b><span>{t(language, "report.kpi.comfort")}</span></div>
+  <div class="kpi"><b>{int(bundle.diagnostic_scorecard['detected'].sum())}/4</b><span>{t(language, "report.kpi.faults")}</span></div>
 </div>
-<h2>Scenario comparison</h2>
-<p>Energy is interval power integrated at 15 minutes. Comfort is the share of occupied zone-samples inside 22–26 °C. Cost is illustrative and uses a disclosed synthetic tariff.</p>
+<h2>{t(language, "report.section.scenario")}</h2>
+<p>{t(language, "report.scenario_note")}</p>
 <div class="table-wrap">{comparison_table}</div>
-<h2>RCx diagnostic scorecard</h2>
-<p>Each rule requires four consecutive samples. A 45-minute delay therefore means detection at the fourth 15-minute sample.</p>
+<h2>{t(language, "report.section.scorecard")}</h2>
+<p>{t(language, "report.scorecard_note")}</p>
 <div class="table-wrap">{scorecard_table}</div>
-<h2>Findings and actions</h2>
+<h2>{t(language, "report.section.findings")}</h2>
 <div class="table-wrap">{findings_table}</div>
-<h2>Model boundary</h2>
+<h2>{t(language, "report.section.boundary")}</h2>
+<ul>{boundary_items}</ul>
+<h2>{t(language, "report.section.sources")}</h2>
 <ul>
-  <li>First-order two-zone RC thermal model and simplified shared AHU/chiller power model.</li>
-  <li>Baseline schedule/P control versus bounded one-hour candidate search; this is not a trained AI model or full MPC implementation.</li>
-  <li>Faults: sensor bias, stuck valve, fouled filter, and after-hours operation.</li>
-  <li>BACnet objects and Modbus registers are simulated point metadata only.</li>
+  <li><a href="https://www.hko.gov.hk/en/cis/normal/1991_2020/dnormal08.htm">{t(language, "report.source.hko")}</a> — {t(language, "report.source.hko_note")}</li>
+  <li><a href="https://www.emsd.gov.hk/filemanager/en/content_718/Technical_Guidelines_Retro-commissioning.pdf">{t(language, "report.source.emsd")}</a> — {t(language, "report.source.emsd_note")}</li>
 </ul>
-<h2>Source anchors</h2>
-<ul>
-  <li><a href="https://www.hko.gov.hk/en/cis/normal/1991_2020/dnormal08.htm">Hong Kong Observatory 1991–2020 August normals</a> — anchors for synthetic summer profile shape.</li>
-  <li><a href="https://www.emsd.gov.hk/filemanager/en/content_718/Technical_Guidelines_Retro-commissioning.pdf">EMSD Technical Guidelines on Retro-commissioning</a> — RCx workflow context.</li>
-</ul>
-<footer>Deterministic project seed: 20260803. Report content is generated from the same APIs used by the dashboard and tests.</footer>
+<footer>{t(language, "report.footer", seed=bundle.baseline.trends.attrs.get("seed"))}</footer>
 </main></body></html>"""
 
 
-def render_markdown_report(bundle: ScenarioBundle) -> str:
+def render_markdown_report(bundle: ScenarioBundle, language: str = "en") -> str:
     optimized = bundle.comparison.loc[bundle.comparison["scenario"] == "optimized"].iloc[0]
     lines = [
-        "# SmartBMS-RCx Technical Report",
+        f"# {t(language, 'report.title')}",
         "",
-        "> **Synthetic-data disclosure:** This proof of concept uses generated weather, loads, faults, and BMS trends. It is not measured building performance or a savings guarantee.",
+        f"> **{t(language, 'report.markdown_disclosure')}:** {t(language, 'report.markdown_disclosure_text')}",
         "",
-        "## Verified scenario result",
+        f"## {t(language, 'report.section.verified')}",
         "",
-        f"- Energy: {bundle.baseline.metrics.energy_kwh:.3f} → {bundle.optimized.metrics.energy_kwh:.3f} kWh ({optimized['energy_savings_pct']:.3f}% simulated saving)",
-        f"- Peak: {bundle.baseline.metrics.peak_kw:.3f} → {bundle.optimized.metrics.peak_kw:.3f} kW ({optimized['peak_reduction_pct']:.3f}% simulated reduction)",
-        f"- Optimized occupied comfort: {bundle.optimized.metrics.occupied_comfort_pct:.3f}% inside 22–26 °C",
-        f"- RCx detection: {int(bundle.diagnostic_scorecard['detected'].sum())}/4 injected faults; median delay {bundle.diagnostic_scorecard['detection_delay_minutes'].median():.0f} minutes",
+        f"- {t(language, 'report.result.energy', baseline=bundle.baseline.metrics.energy_kwh, optimized=bundle.optimized.metrics.energy_kwh, saving=optimized['energy_savings_pct'])}",
+        f"- {t(language, 'report.result.peak', baseline=bundle.baseline.metrics.peak_kw, optimized=bundle.optimized.metrics.peak_kw, reduction=optimized['peak_reduction_pct'])}",
+        f"- {t(language, 'report.result.comfort', comfort=bundle.optimized.metrics.occupied_comfort_pct)}",
+        f"- {t(language, 'report.result.rcx', detected=int(bundle.diagnostic_scorecard['detected'].sum()), delay=bundle.diagnostic_scorecard['detection_delay_minutes'].median())}",
         "",
-        "## Boundaries",
+        f"## {t(language, 'report.section.boundaries')}",
         "",
-        "- Two-zone first-order RC model; simplified fan/chiller energy.",
-        "- Bounded predictive candidate search, not a trained model or full MPC.",
-        "- Simulated BACnet/Modbus metadata; no live building connection.",
-        "- Illustrative tariff; no commercial savings claim.",
+        *[f"- {t(language, f'report.boundary.short.{position}')}" for position in range(1, 5)],
         "",
-        "## References",
+        f"## {t(language, 'report.section.references')}",
         "",
-        "- [HKO 1991–2020 August normals](https://www.hko.gov.hk/en/cis/normal/1991_2020/dnormal08.htm)",
-        "- [EMSD Technical Guidelines on Retro-commissioning](https://www.emsd.gov.hk/filemanager/en/content_718/Technical_Guidelines_Retro-commissioning.pdf)",
+        f"- [{t(language, 'report.source.hko')}](https://www.hko.gov.hk/en/cis/normal/1991_2020/dnormal08.htm)",
+        f"- [{t(language, 'report.source.emsd')}](https://www.emsd.gov.hk/filemanager/en/content_718/Technical_Guidelines_Retro-commissioning.pdf)",
         "",
     ]
     return "\n".join(lines)
