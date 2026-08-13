@@ -38,7 +38,13 @@ Keep `generated/scenario-comparison.csv` open as arithmetic evidence. Use the de
 
 操作：打开 **Energy Optimization**，指向比较表和两条功率曲线。
 
-### 1:55–2:35｜做一次 RCx 诊断
+### 1:55–2:15｜先做数据质量准入
+
+“真实 RCx 不能拿到 CSV 就直接报故障。我先严格解析时间戳、数值和布尔字段，再检查重复/乱序/不规则采样、缺失、冻结、工程范围、温度突变和跨点位矛盾。四类规则各有自己的必要点位；数据不足时显示‘不能运行’，而不是误报成‘设备健康’。”
+
+操作：打开 **Data Quality & Import**，指出健康样例的 100 分、八项检查和 4/4 规则准入；说明上传文件只在内存处理。
+
+### 2:15–2:40｜做一次 RCx 诊断
 
 “这里我选阀门卡滞。控制器给了较大供冷命令，但阀门反馈停在 0.15，持续四个采样点后形成高严重度 finding。系统不是只报一个 alarm，而是给出命令—反馈证据、影响估计和下一步动作：检查执行器连杆，再做全开全关功能测试。”
 
@@ -46,7 +52,7 @@ Keep `generated/scenario-comparison.csv` open as arithmetic evidence. Use the de
 
 “另外三类是传感器偏置、过滤器堵塞和非工作时段运行。健康场景没有 RCx finding；预测预冷也被显式标为授权，避免误报。”
 
-### 2:35–2:55｜展示 BMS 思维
+### 2:40–2:55｜展示 BMS 思维
 
 “点表有 19 个模拟点，包括单位、读写属性、BACnet 对象和 Modbus 寄存器。它不是实际通讯驱动，但能说明我理解一个点如何进入趋势、报警、诊断和界面。”
 
@@ -54,11 +60,11 @@ Keep `generated/scenario-comparison.csv` open as arithmetic evidence. Use the de
 
 ### 2:55–3:00｜收尾
 
-“项目有 69 个自动化测试和可复算 CSV，包括中英文六页渲染和双语报告测试。下一步如果拿到真实数据，我会先做数据质量和模型标定，再做只读诊断验证，最后才评估有联锁的控制写入。”
+“项目有 99 个自动化测试和可复算 CSV，包括严格导入、质量门控、中英文七页渲染和双语报告测试。拿到真实数据后，我仍会先确认点位语义、标定和技术人员反馈，再评估有联锁的控制写入。”
 
 ## 45-second English version
 
-“SmartBMS-RCx is an offline synthetic proof of concept for building HVAC controls and retro-commissioning. It connects a two-zone RC thermal model, schedule/P-control baseline, explainable one-hour bounded predictive supervision, four injected faults, simulated BMS point semantics, and a bilingual six-page Streamlit dashboard. In the fixed seven-day scenario, energy decreased from 844.288 to 796.814 kilowatt-hours—5.623%—while all occupied zone-samples stayed within 22 to 26 degrees Celsius. All four faults were detected after four persistent samples, or 45 minutes. I treat those as model-specific simulation results, not real-building savings or live BACnet deployment. The repository includes 69 tests and interval CSVs for independent recomputation.”
+“SmartBMS-RCx is a public synthetic proof of concept for building HVAC controls and retro-commissioning. It combines a two-zone RC model, bounded predictive supervision, four injected faults, strict in-memory CSV ingestion, eight data-quality checks, rule-specific diagnostic admission, and a bilingual seven-page dashboard. In the fixed scenario, simulated energy decreased from 844.288 to 796.814 kilowatt-hours—5.623%—with 100% occupied comfort, while all four injected faults were detected after 45 minutes. These are model-specific results, not real-building savings or live BACnet deployment. The repository includes 99 automated tests and reproducible interval CSVs.”
 
 ## If the interviewer interrupts
 

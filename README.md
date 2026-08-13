@@ -1,10 +1,18 @@
 # SmartBMS-RCx
 
+[![CI](https://github.com/LZZ434/smartbms-rcx/actions/workflows/ci.yml/badge.svg)](https://github.com/LZZ434/smartbms-rcx/actions/workflows/ci.yml)
+[![Live app](https://img.shields.io/badge/live-Streamlit-ff4b4b)](https://smartbms-rcx-hk.streamlit.app)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 An explainable, offline proof of concept for building HVAC controls, energy optimization, BMS point semantics, and retro-commissioning (RCx) diagnostics.
 
 > **Data and claim boundary:** all weather, occupancy, load, BMS, fault, cost, and savings values in this repository are synthetic. The project is not connected to a real building, does not implement a live BACnet/Modbus client, and does not guarantee real-world savings.
 
 [中文说明](README.zh-CN.md)
+
+**[Open the public bilingual dashboard](https://smartbms-rcx-hk.streamlit.app)** · [Source code](https://github.com/LZZ434/smartbms-rcx)
+
+The free Community Cloud app may sleep after 12 hours without traffic. If a sleep screen appears, choose the wake option and allow a short cold start.
 
 ![RCx dashboard](docs/assets/rcx-dashboard.png)
 
@@ -32,10 +40,19 @@ These values are automatically calculated from interval trends and tested in `te
 - Simplified chiller COP and cubic fan-power behavior with explicit engineering units.
 - Four deterministic fault modes and persistent RCx rules with evidence, severity, impact estimate, and corrective action.
 - A 19-point simulated BMS registry with BACnet object and Modbus register metadata, plus alarm semantics.
-- Six bilingual Streamlit pages: overview, plant/control, optimization, RCx, points/alarms, and a guided Learning Lab. The app defaults to Chinese and switches to English from the sidebar.
+- Strict, in-memory CSV ingestion followed by eight deterministic quality checks and rule-specific diagnostic admission; insufficient data cannot be reported as “healthy.”
+- Seven bilingual Streamlit pages: overview, plant/control, optimization, data quality/import, RCx, points/alarms, and a guided Learning Lab. The app defaults to Chinese and switches to English from the sidebar.
 - Reproducible Chinese/English HTML and Markdown downloads plus canonical CSV exports, all driven by the same domain APIs as the tests and dashboard.
 
 ## Quick start
+
+### 60-second hosted walkthrough
+
+1. Open the [live app](https://smartbms-rcx-hk.streamlit.app) and read the synthetic-data boundary.
+2. Open **Data Quality & Import** to see the healthy sample score, eight checks, and four rule-admission decisions.
+3. Download the sample CSV, upload it back, then open **RCx Diagnostics** for evidence-to-action examples.
+
+Uploads are limited to 10 MB, processed only in the active Streamlit process/session, and not stored by this application. See the [trend data contract](docs/data-contract.md) before using another schema.
 
 Python 3.11 or later is recommended.
 
@@ -77,6 +94,8 @@ flowchart LR
     E["Fault injector"] --> C
     C --> F["BMS trend schema and alarms"]
     F --> G["Persistent RCx diagnostics"]
+    F --> Q["CSV ingestion and data-quality gates"]
+    Q --> G
     F --> H["Energy, peak, comfort and cost metrics"]
     G --> I["Streamlit dashboard and report exports"]
     H --> I
@@ -95,12 +114,15 @@ smartbms/
   faults.py         four disclosed fault injections
   points.py         simulated BMS registry and alarms
   diagnostics.py    persistent RCx findings
+  trend_io.py       strict in-memory CSV and type boundary
+  data_quality.py   eight checks and per-rule readiness
+  screening.py      quality-gated read-only RCx execution
   metrics.py        auditable KPI calculations
   scenarios.py      end-to-end scenario orchestration
   i18n.py           Chinese/English UI and engineering-display localization
   reporting.py      HTML, Markdown, CSV, and manifest exports
-app.py               six-page Streamlit interface
-tests/               69 unit/integration/smoke tests
+app.py               seven-page bilingual Streamlit interface
+tests/               99 unit/integration/release/smoke tests
 docs/                design, architecture, learning, résumé, and interview assets
 scripts/             one-command portfolio export
 ```
@@ -128,6 +150,8 @@ Inspect:
 - The predictive strategy is a bounded candidate search, not a trained AI model and not a full constrained MPC solver.
 - The sensor-bias rule uses a simulation reference temperature. A real project would require a calibrated model, redundant sensor, or portable reference instrument.
 - Fault impact values are scenario estimates, not measurement-and-verification savings.
+- Uploaded CSV screening is read-only and advisory; eligibility is not sensor calibration, technician validation, or a deployment approval.
+- The public app does not persist uploads and has no BACnet/Modbus/MQTT connection or control-write path.
 - BACnet/Modbus fields show point-model literacy only; network discovery, device security, write interlocks, and commissioning are outside this version.
 - The illustrative tariff is not a current utility quotation.
 

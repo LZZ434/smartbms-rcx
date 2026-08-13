@@ -18,7 +18,7 @@ Can an explainable predictive supervisor reduce simulated HVAC energy without sa
 4. Injected temperature-sensor bias, stuck-valve, fouled-filter, and after-hours faults in disclosed time windows.
 5. Designed persistent RCx rules that produce evidence, severity, confidence, estimated impact, and corrective action.
 6. Added a 19-point simulated BMS registry with BACnet/Modbus metadata and instantaneous alarm rules.
-7. Connected the same tested APIs to a six-page Streamlit dashboard and deterministic HTML/CSV export pipeline.
+7. Connected the same tested APIs to a seven-page bilingual Streamlit dashboard, strict trend-data quality workspace, and deterministic HTML/CSV export pipeline.
 
 ## Verified result
 
