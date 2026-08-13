@@ -9,7 +9,7 @@ class ReleaseAssetTests(unittest.TestCase):
         self.assertEqual(
             requirements.splitlines(),
             [
-                "numpy==2.5.2",
+                "numpy==2.4.6",
                 "pandas==3.0.5",
                 "streamlit==1.61.1",
             ],
