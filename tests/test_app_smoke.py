@@ -19,7 +19,7 @@ def _run_page(language: str, page_id: str) -> AppTest:
 
 
 class DashboardSmokeTests(unittest.TestCase):
-    def test_dashboard_module_imports_and_exposes_six_stable_page_ids(self):
+    def test_dashboard_module_imports_and_exposes_seven_stable_page_ids(self):
         module = importlib.import_module("app")
 
         self.assertTrue(callable(module.main))
@@ -29,6 +29,7 @@ class DashboardSmokeTests(unittest.TestCase):
                 "overview",
                 "plant_control",
                 "energy_optimization",
+                "data_quality",
                 "rcx_diagnostics",
                 "bms_points_alarms",
                 "learning_lab",
@@ -79,11 +80,12 @@ class DashboardSmokeTests(unittest.TestCase):
         ):
             self.assertNotIn(broken, sources)
 
-    def test_all_six_pages_render_in_chinese_and_english(self):
+    def test_all_seven_pages_render_in_chinese_and_english(self):
         expected = {
             "overview": {"zh": "项目概览", "en": "Overview"},
             "plant_control": {"zh": "设备与控制", "en": "Plant & Control"},
             "energy_optimization": {"zh": "能源优化", "en": "Energy Optimization"},
+            "data_quality": {"zh": "数据质量与导入", "en": "Data Quality & Import"},
             "rcx_diagnostics": {"zh": "再调试（RCx）诊断", "en": "RCx Diagnostics"},
             "bms_points_alarms": {"zh": "BMS 点表与报警", "en": "BMS Points & Alarms"},
             "learning_lab": {"zh": "学习实验室", "en": "Learning Lab"},
@@ -94,6 +96,47 @@ class DashboardSmokeTests(unittest.TestCase):
                     app = _run_page(language, page_id)
                     self.assertFalse(app.exception)
                     self.assertEqual(app.title[0].value, label)
+
+    def test_data_quality_page_renders_sample_analysis_in_both_languages(self):
+        expected = {
+            "zh": ("数据质量与导入", "内存中处理", "数据质量报告"),
+            "en": (
+                "Data Quality & Import",
+                "processed in memory",
+                "Data-quality report",
+            ),
+        }
+        for language, phrases in expected.items():
+            with self.subTest(language=language):
+                app = _run_page(language, "data_quality")
+                self.assertFalse(app.exception)
+                rendered = "\n".join(
+                    item.value
+                    for group in (app.title, app.caption, app.info, app.markdown)
+                    for item in group
+                    if isinstance(item.value, str)
+                )
+                button_labels = "\n".join(
+                    item.proto.label for item in app.download_button
+                )
+                combined = f"{rendered}\n{button_labels}"
+                for phrase in phrases:
+                    self.assertIn(phrase, combined)
+                self.assertGreaterEqual(len(app.dataframe), 3)
+
+    def test_data_quality_downloads_keep_canonical_filenames(self):
+        module = importlib.import_module("app")
+        app = _run_page("zh", "data_quality")
+
+        self.assertEqual(
+            set(module.QUALITY_DOWNLOAD_FILENAMES.values()),
+            {
+                "smartbms-sample-trends.csv",
+                "smartbms-normalized-trends.csv",
+                "smartbms-data-quality-report.csv",
+            },
+        )
+        self.assertEqual(len(app.download_button), 3)
 
     def test_chinese_rcx_page_localizes_action_and_tables(self):
         app = _run_page("zh", "rcx_diagnostics")

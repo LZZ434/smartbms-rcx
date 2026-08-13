@@ -12,6 +12,7 @@ from smartbms.i18n import (
     localize_findings_frame,
     localize_frame,
     page_label,
+    quality_label,
     report_filename,
     scenario_label,
     t,
@@ -33,12 +34,39 @@ class TranslationCoreTests(unittest.TestCase):
             scenario_label("custom-scenario", "fr")
 
     def test_page_labels_are_unique_in_both_languages(self):
-        self.assertEqual(len(PAGE_IDS), 6)
+        self.assertEqual(len(PAGE_IDS), 7)
         for language in LANGUAGE_NAMES:
             labels = [page_label(page_id, language) for page_id in PAGE_IDS]
-            self.assertEqual(len(set(labels)), 6)
+            self.assertEqual(len(set(labels)), 7)
         self.assertEqual(page_label("overview", "zh"), "项目概览")
         self.assertEqual(page_label("overview", "en"), "Overview")
+
+    def test_quality_labels_are_bilingual_and_exports_remain_canonical(self):
+        self.assertEqual(page_label("data_quality", "zh"), "数据质量与导入")
+        self.assertEqual(page_label("data_quality", "en"), "Data Quality & Import")
+        self.assertEqual(quality_label("timestamp_duplicate", "zh"), "重复时间戳")
+        self.assertEqual(
+            quality_label("timestamp_duplicate", "en"),
+            "Duplicate timestamps",
+        )
+
+        source = pd.DataFrame(
+            {
+                "check_code": ["timestamps"],
+                "status": ["fail"],
+                "issue_code": ["timestamp_duplicate"],
+                "severity": ["critical"],
+                "category": ["sensor_bias"],
+                "eligible": [True],
+            }
+        )
+        localized = localize_frame(source, "zh")
+
+        self.assertEqual(source.iloc[0]["status"], "fail")
+        self.assertEqual(localized.iloc[0]["检查状态"], "未通过")
+        self.assertEqual(localized.iloc[0]["问题代码"], "重复时间戳")
+        self.assertEqual(localized.iloc[0]["严重程度"], "严重")
+        self.assertEqual(localized.iloc[0]["可运行"], "是")
 
     def test_report_filenames_identify_the_selected_language(self):
         self.assertEqual(report_filename("zh", "html"), "smartbms-rcx-report-zh.html")

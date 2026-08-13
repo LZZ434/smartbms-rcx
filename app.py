@@ -7,6 +7,12 @@ from dataclasses import asdict
 import pandas as pd
 import streamlit as st
 
+from smartbms.data_quality_reporting import (
+    checks_frame,
+    issues_frame,
+    quality_report_frame,
+    readiness_frame,
+)
 from smartbms.i18n import (
     LANGUAGE_NAMES,
     PAGE_IDS,
@@ -23,6 +29,19 @@ from smartbms.i18n import (
 )
 from smartbms.reporting import render_html_report, render_markdown_report
 from smartbms.scenarios import ScenarioBundle, ScenarioRun, run_portfolio_scenarios
+from smartbms.screening import screen_trends
+from smartbms.trend_io import (
+    TrendIngestionError,
+    canonicalize_trend_frame,
+    ingest_csv_bytes,
+)
+
+
+QUALITY_DOWNLOAD_FILENAMES = {
+    "sample": "smartbms-sample-trends.csv",
+    "normalized": "smartbms-normalized-trends.csv",
+    "report": "smartbms-data-quality-report.csv",
+}
 
 
 @st.cache_resource(show_spinner=False)
@@ -50,6 +69,14 @@ def _alarms_frame(run: ScenarioRun) -> pd.DataFrame:
             columns=("timestamp", "point_id", "priority", "observed_value", "limit", "message")
         )
     return pd.DataFrame(asdict(alarm) for alarm in run.alarms)
+
+
+def _csv_bytes(frame: pd.DataFrame) -> bytes:
+    return frame.to_csv(index=False).encode("utf-8-sig")
+
+
+def _quality_error_message(error: TrendIngestionError, language: str) -> str:
+    return t(language, f"quality.error.{error.code}")
 
 
 def _hidden_fault_labels(
@@ -210,6 +237,118 @@ def render_optimization(bundle: ScenarioBundle, language: str) -> None:
         bundle.comparison.to_csv(index=False).encode("utf-8"),
         "scenario-comparison.csv",
         "text/csv",
+    )
+
+
+def render_data_quality(bundle: ScenarioBundle, language: str) -> None:
+    _page_header("data_quality", "quality.subtitle", language)
+    st.info(t(language, "quality.disclosure"))
+    st.caption(t(language, "quality.privacy"))
+
+    sample_frame = bundle.baseline.trends
+    st.download_button(
+        t(language, "quality.sample_download"),
+        data=_csv_bytes(sample_frame),
+        file_name=QUALITY_DOWNLOAD_FILENAMES["sample"],
+        mime="text/csv",
+        key="quality_sample_download",
+    )
+    uploaded = st.file_uploader(
+        t(language, "quality.upload"),
+        type=("csv",),
+        help=t(language, "quality.upload_help"),
+        key="quality_upload",
+    )
+
+    try:
+        ingestion = (
+            ingest_csv_bytes(uploaded.getvalue())
+            if uploaded is not None
+            else canonicalize_trend_frame(sample_frame)
+        )
+    except TrendIngestionError as error:
+        st.error(_quality_error_message(error, language))
+        return
+
+    st.caption(
+        t(
+            language,
+            "quality.source_upload" if uploaded is not None else "quality.source_sample",
+        )
+    )
+    result = screen_trends(ingestion.frame)
+    report = result.quality
+    ready_count = sum(item.eligible for item in report.readiness)
+    interval = (
+        f"{report.sampling_interval_minutes:g} min"
+        if report.sampling_interval_minutes is not None
+        else "—"
+    )
+    metrics = st.columns(4)
+    metrics[0].metric(t(language, "quality.rows"), f"{report.row_count:,}")
+    metrics[1].metric(t(language, "quality.interval"), interval)
+    metrics[2].metric(t(language, "quality.score"), f"{report.score:.1f}/100")
+    metrics[3].metric(
+        t(language, "quality.ready_rules"),
+        f"{ready_count}/{len(report.readiness)}",
+    )
+
+    st.subheader(t(language, "quality.checks"))
+    st.dataframe(
+        localize_frame(checks_frame(report), language),
+        hide_index=True,
+        width="stretch",
+    )
+
+    st.subheader(t(language, "quality.issues"))
+    issue_data = issues_frame(report)
+    if issue_data.empty:
+        st.success(t(language, "quality.no_issues"))
+    else:
+        st.dataframe(
+            localize_frame(issue_data, language),
+            hide_index=True,
+            width="stretch",
+        )
+
+    st.subheader(t(language, "quality.readiness"))
+    st.dataframe(
+        localize_frame(readiness_frame(report), language),
+        hide_index=True,
+        width="stretch",
+    )
+
+    st.subheader(t(language, "quality.findings"))
+    if result.findings:
+        st.dataframe(
+            localize_findings_frame(result.findings, language),
+            hide_index=True,
+            width="stretch",
+        )
+    else:
+        st.success(t(language, "quality.no_findings"))
+    st.warning(t(language, "quality.screening_disclosure"))
+
+    st.subheader(t(language, "quality.preview"))
+    st.dataframe(
+        localize_frame(result.frame.head(100), language),
+        hide_index=True,
+        width="stretch",
+    )
+    left, right = st.columns(2)
+    left.download_button(
+        t(language, "quality.normalized_download"),
+        data=_csv_bytes(result.frame),
+        file_name=QUALITY_DOWNLOAD_FILENAMES["normalized"],
+        mime="text/csv",
+        key="quality_normalized_download",
+    )
+    right.download_button(
+        t(language, "quality.report_download"),
+        data=_csv_bytes(quality_report_frame(report)),
+        file_name=QUALITY_DOWNLOAD_FILENAMES["report"],
+        mime="text/csv",
+        key="quality_report_download",
     )
 
 
@@ -395,6 +534,7 @@ def main() -> None:
         "overview": render_overview,
         "plant_control": render_plant_control,
         "energy_optimization": render_optimization,
+        "data_quality": render_data_quality,
         "rcx_diagnostics": render_rcx,
         "bms_points_alarms": render_points_alarms,
         "learning_lab": render_learning_lab,

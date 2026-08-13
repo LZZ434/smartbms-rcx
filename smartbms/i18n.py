@@ -20,6 +20,7 @@ PAGE_IDS = (
     "overview",
     "plant_control",
     "energy_optimization",
+    "data_quality",
     "rcx_diagnostics",
     "bms_points_alarms",
     "learning_lab",
@@ -35,6 +36,7 @@ TRANSLATIONS: dict[Language, dict[str, str]] = {
         "page.overview": "Overview",
         "page.plant_control": "Plant & Control",
         "page.energy_optimization": "Energy Optimization",
+        "page.data_quality": "Data Quality & Import",
         "page.rcx_diagnostics": "RCx Diagnostics",
         "page.bms_points_alarms": "BMS Points & Alarms",
         "page.learning_lab": "Learning Lab",
@@ -73,6 +75,37 @@ TRANSLATIONS: dict[Language, dict[str, str]] = {
         "optimization.why": "Why energy changed",
         "optimization.explanation": "The optimized controller uses a one-hour weather/occupancy look-ahead, authorized pre-cooling, relaxed unoccupied operation, and a comfort penalty. In this fixed synthetic week it reduces energy by **{saving:.3f}%** while keeping all occupied zone-samples inside 22–26 °C. The result is not transferable to a real site without calibration.",
         "optimization.download": "Download comparison CSV",
+        "quality.subtitle": "Validate trend integrity before read-only RCx screening.",
+        "quality.disclosure": "The bundled sample is synthetic. Uploaded data is screened read-only and does not change the verified portfolio KPI scenario.",
+        "quality.privacy": "Uploaded CSV content is processed in memory for this session and is not stored by the application.",
+        "quality.sample_download": "Download canonical sample CSV",
+        "quality.upload": "Upload BMS trend CSV (optional)",
+        "quality.upload_help": "Maximum 10 MB · UTF-8 CSV · canonical English engineering field names",
+        "quality.source_sample": "Source: bundled synthetic healthy baseline",
+        "quality.source_upload": "Source: uploaded in-memory CSV",
+        "quality.rows": "Rows",
+        "quality.interval": "Sampling interval",
+        "quality.score": "Quality score",
+        "quality.ready_rules": "RCx rules ready",
+        "quality.checks": "Quality checks",
+        "quality.issues": "Detected data issues",
+        "quality.no_issues": "No data-quality issue was detected in the selected source.",
+        "quality.readiness": "Rule-specific RCx readiness",
+        "quality.findings": "Screening findings",
+        "quality.no_findings": "No screening finding was produced by the admitted rules.",
+        "quality.preview": "Normalized-data preview",
+        "quality.normalized_download": "Download normalized trends CSV",
+        "quality.report_download": "Data-quality report CSV",
+        "quality.screening_disclosure": "Screening findings require technician review and field context. Eligibility is not proof of calibration or deployability.",
+        "quality.detail": "{issue}; affected rows: {rows}",
+        "quality.error.empty_file": "The CSV is empty. Add at least one timestamped data row.",
+        "quality.error.file_too_large": "The CSV exceeds the 10 MB upload limit.",
+        "quality.error.malformed_csv": "The file is not a valid UTF-8 CSV.",
+        "quality.error.missing_timestamp": "A canonical timestamp column is required.",
+        "quality.error.invalid_timestamp": "The timestamp column contains missing or unparseable values.",
+        "quality.error.invalid_numeric": "A known engineering point contains a non-numeric value.",
+        "quality.error.invalid_boolean": "A known boolean point contains an unsupported value.",
+        "quality.error.duplicate_columns": "The CSV contains duplicate column names.",
         "rcx.subtitle": "Four-sample persistence, explicit evidence, and corrective action.",
         "rcx.injected_fault": "Injected fault",
         "rcx.severity": "Severity",
@@ -152,6 +185,7 @@ TRANSLATIONS: dict[Language, dict[str, str]] = {
         "page.overview": "项目概览",
         "page.plant_control": "设备与控制",
         "page.energy_optimization": "能源优化",
+        "page.data_quality": "数据质量与导入",
         "page.rcx_diagnostics": "再调试（RCx）诊断",
         "page.bms_points_alarms": "BMS 点表与报警",
         "page.learning_lab": "学习实验室",
@@ -190,6 +224,37 @@ TRANSLATIONS: dict[Language, dict[str, str]] = {
         "optimization.why": "能耗为何发生变化",
         "optimization.explanation": "优化控制器使用一小时天气/占用预测、授权预冷、放宽无人时段运行，并加入舒适度惩罚。在该固定合成周中，能耗降低 **{saving:.3f}%**，同时所有占用时区域温度样本均位于 22–26 °C。未经真实数据标定，结果不能直接外推到实际项目。",
         "optimization.download": "下载场景对比 CSV",
+        "quality.subtitle": "在运行只读 RCx 筛查前，先验证趋势数据的完整性与可信度。",
+        "quality.disclosure": "内置样例为合成数据；上传数据仅用于只读筛查，不会改变作品集已验证的 KPI 场景。",
+        "quality.privacy": "上传的 CSV 仅在本次会话的内存中处理，应用不会保存文件内容。",
+        "quality.sample_download": "下载标准样例 CSV",
+        "quality.upload": "上传 BMS 趋势 CSV（可选）",
+        "quality.upload_help": "最大 10 MB · UTF-8 CSV · 使用标准英文工程字段名",
+        "quality.source_sample": "数据源：内置合成健康基线",
+        "quality.source_upload": "数据源：上传的内存 CSV",
+        "quality.rows": "数据行数",
+        "quality.interval": "采样间隔",
+        "quality.score": "质量评分",
+        "quality.ready_rules": "可运行 RCx 规则",
+        "quality.checks": "数据质量检查",
+        "quality.issues": "已发现的数据问题",
+        "quality.no_issues": "当前数据源未检出数据质量问题。",
+        "quality.readiness": "各 RCx 规则准入状态",
+        "quality.findings": "筛查结果",
+        "quality.no_findings": "已获准运行的规则没有产生筛查结果。",
+        "quality.preview": "标准化数据预览",
+        "quality.normalized_download": "下载标准化趋势 CSV",
+        "quality.report_download": "数据质量报告 CSV",
+        "quality.screening_disclosure": "筛查结果仍需技术人员结合现场信息复核；规则可运行不等于传感器已校准或方案可直接部署。",
+        "quality.detail": "{issue}；影响行数：{rows}",
+        "quality.error.empty_file": "CSV 为空，请至少加入一行带时间戳的数据。",
+        "quality.error.file_too_large": "CSV 超过 10 MB 上传限制。",
+        "quality.error.malformed_csv": "文件不是有效的 UTF-8 CSV。",
+        "quality.error.missing_timestamp": "必须包含标准字段 timestamp。",
+        "quality.error.invalid_timestamp": "timestamp 中存在缺失值或无法解析的时间。",
+        "quality.error.invalid_numeric": "已知工程点位中存在非数值内容。",
+        "quality.error.invalid_boolean": "已知布尔点位中存在不支持的取值。",
+        "quality.error.duplicate_columns": "CSV 包含重复字段名。",
         "rcx.subtitle": "采用连续四个样本的持续性判据，并给出明确证据和整改措施。",
         "rcx.injected_fault": "注入故障",
         "rcx.severity": "严重程度",
@@ -276,6 +341,38 @@ SEVERITY_LABELS: dict[str, dict[Language, str]] = {
     "low": {"en": "Low", "zh": "低"},
     "medium": {"en": "Medium", "zh": "中"},
     "high": {"en": "High", "zh": "高"},
+}
+QUALITY_LABELS: dict[str, dict[Language, str]] = {
+    "timestamps": {"en": "Timestamp integrity", "zh": "时间戳完整性"},
+    "history": {"en": "History length", "zh": "历史数据长度"},
+    "coverage": {"en": "Point coverage", "zh": "点位覆盖率"},
+    "missing": {"en": "Missing values", "zh": "缺失值"},
+    "frozen": {"en": "Frozen signals", "zh": "信号冻结"},
+    "bounds": {"en": "Engineering bounds", "zh": "工程范围"},
+    "temperature_rate": {"en": "Temperature rate of change", "zh": "温度变化率"},
+    "cross_point": {"en": "Cross-point consistency", "zh": "跨点位一致性"},
+    "timestamp_missing": {"en": "Missing timestamp column", "zh": "缺少时间戳字段"},
+    "timestamp_invalid": {"en": "Invalid timestamps", "zh": "无效时间戳"},
+    "timestamp_duplicate": {"en": "Duplicate timestamps", "zh": "重复时间戳"},
+    "timestamp_unsorted": {"en": "Unsorted timestamps", "zh": "时间戳未排序"},
+    "timestamp_irregular": {"en": "Irregular sampling interval", "zh": "采样间隔不规则"},
+    "history_too_short": {"en": "Insufficient history", "zh": "历史数据不足"},
+    "required_columns_missing": {"en": "Required points missing", "zh": "缺少必要点位"},
+    "missing_values": {"en": "Missing point values", "zh": "点位存在缺失值"},
+    "frozen_signal": {"en": "Sustained frozen signal", "zh": "信号持续冻结"},
+    "engineering_bounds": {"en": "Value outside engineering bounds", "zh": "数值超出工程范围"},
+    "cross_point_power": {"en": "HVAC/fan power inconsistency", "zh": "HVAC 与风机功率矛盾"},
+    "cross_point_expected_fan": {"en": "Invalid expected fan power", "zh": "期望风机功率无效"},
+}
+QUALITY_STATUS_LABELS: dict[str, dict[Language, str]] = {
+    "pass": {"en": "Passed", "zh": "通过"},
+    "warning": {"en": "Warning", "zh": "警告"},
+    "fail": {"en": "Failed", "zh": "未通过"},
+}
+QUALITY_SEVERITY_LABELS: dict[str, dict[Language, str]] = {
+    "critical": {"en": "Critical", "zh": "严重"},
+    "warning": {"en": "Warning", "zh": "警告"},
+    "info": {"en": "Info", "zh": "提示"},
 }
 ALARM_MESSAGES_ZH = {
     "High zone temperature": "区域温度过高",
@@ -366,6 +463,18 @@ COLUMN_LABELS: dict[str, dict[Language, str]] = {
     "observed_value": {"en": "Observed value", "zh": "观测值"},
     "limit": {"en": "Limit", "zh": "限值"},
     "message": {"en": "Message", "zh": "报警信息"},
+    "check_code": {"en": "Quality check", "zh": "检查项目"},
+    "status": {"en": "Check status", "zh": "检查状态"},
+    "weight": {"en": "Weight", "zh": "权重"},
+    "issue_count": {"en": "Issue count", "zh": "问题数量"},
+    "issue_code": {"en": "Issue", "zh": "问题代码"},
+    "columns": {"en": "Affected points", "zh": "受影响点位"},
+    "affected_rows": {"en": "Affected rows", "zh": "影响行数"},
+    "detail": {"en": "Evidence", "zh": "问题说明"},
+    "eligible": {"en": "Ready", "zh": "可运行"},
+    "required_columns": {"en": "Required points", "zh": "必要点位"},
+    "missing_columns": {"en": "Missing points", "zh": "缺失点位"},
+    "blocking_issue_codes": {"en": "Blocking issues", "zh": "阻断问题"},
 }
 
 WEEKDAYS_ZH = ("星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日")
@@ -443,6 +552,28 @@ def severity_label(value: str, language: str) -> str:
     return _domain_label(SEVERITY_LABELS, value.lower(), language)
 
 
+def quality_label(value: str, language: str) -> str:
+    return _domain_label(QUALITY_LABELS, value, language)
+
+
+def _quality_status_label(value: str, language: str) -> str:
+    return _domain_label(QUALITY_STATUS_LABELS, value, language)
+
+
+def _quality_severity_label(value: str, language: str) -> str:
+    return _domain_label(QUALITY_SEVERITY_LABELS, value, language)
+
+
+def _quality_code_list(value: object, language: str) -> object:
+    if not isinstance(value, str) or not value.strip():
+        return value
+    return ", ".join(
+        quality_label(code.strip(), language)
+        for code in value.split(",")
+        if code.strip()
+    )
+
+
 def localize_alarm_message(message: str, language: str) -> str:
     selected = _validate_language(language)
     return ALARM_MESSAGES_ZH.get(message, message) if selected == "zh" else message
@@ -515,11 +646,47 @@ def localize_frame(frame: pd.DataFrame, language: str) -> pd.DataFrame:
             localized[column] = localized[column].map(
                 lambda value: fault_label(str(value), selected)
             )
+    if "check_code" in localized:
+        localized["check_code"] = localized["check_code"].map(
+            lambda value: quality_label(str(value), selected)
+        )
+    if "issue_code" in localized:
+        raw_issue_codes = localized["issue_code"].copy()
+        localized["issue_code"] = localized["issue_code"].map(
+            lambda value: quality_label(str(value), selected) if value else value
+        )
+        if "detail" in localized and "affected_rows" in localized:
+            localized["detail"] = [
+                t(
+                    selected,
+                    "quality.detail",
+                    issue=quality_label(str(code), selected),
+                    rows=rows,
+                )
+                if code
+                else detail
+                for code, rows, detail in zip(
+                    raw_issue_codes,
+                    localized["affected_rows"],
+                    localized["detail"],
+                    strict=True,
+                )
+            ]
+    if "blocking_issue_codes" in localized:
+        localized["blocking_issue_codes"] = localized[
+            "blocking_issue_codes"
+        ].map(lambda value: _quality_code_list(value, selected))
+    if "status" in localized:
+        localized["status"] = localized["status"].map(
+            lambda value: _quality_status_label(str(value), selected)
+        )
     if "severity" in localized:
         localized["severity"] = localized["severity"].map(
-            lambda value: severity_label(str(value), selected)
+            lambda value: _quality_severity_label(str(value), selected)
+            if str(value) in QUALITY_SEVERITY_LABELS
+            else severity_label(str(value), selected)
         )
-    for column in ("detected", "writable"):
+    for column in ("detected", "writable", "eligible"):
         if column in localized:
             labels = {
                 True: "Yes" if selected == "en" else "是",
