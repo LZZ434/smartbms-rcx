@@ -96,6 +96,14 @@ class TrendIngestionTests(unittest.TestCase):
         self.assertEqual(duplicate.exception.code, "duplicate_columns")
         self.assertEqual(malformed.exception.code, "malformed_csv")
 
+    def test_duplicate_csv_headers_are_rejected_before_pandas_renames_them(self):
+        payload = b"timestamp,hvac_power_kw,hvac_power_kw\n2026-08-01,1,2\n"
+
+        with self.assertRaises(TrendIngestionError) as caught:
+            ingest_csv_bytes(payload)
+
+        self.assertEqual(caught.exception.code, "duplicate_columns")
+
 
 if __name__ == "__main__":
     unittest.main()

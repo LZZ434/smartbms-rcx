@@ -123,6 +123,10 @@ class DashboardSmokeTests(unittest.TestCase):
                 for phrase in phrases:
                     self.assertIn(phrase, combined)
                 self.assertGreaterEqual(len(app.dataframe), 3)
+                self.assertEqual(len(app.metric), 5)
+                self.assertTrue(
+                    any("2026" in item.value for item in app.metric)
+                )
 
     def test_data_quality_downloads_keep_canonical_filenames(self):
         module = importlib.import_module("app")

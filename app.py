@@ -317,11 +317,20 @@ def render_data_quality(bundle: ScenarioBundle, language: str) -> None:
         if report.sampling_interval_minutes is not None
         else "—"
     )
-    metrics = st.columns(4)
-    metrics[0].metric(t(language, "quality.rows"), f"{report.row_count:,}")
-    metrics[1].metric(t(language, "quality.interval"), interval)
-    metrics[2].metric(t(language, "quality.score"), f"{report.score:.1f}/100")
-    metrics[3].metric(
+    time_span = (
+        f"{report.start_time:%Y-%m-%d} → {report.end_time:%Y-%m-%d}"
+        if report.start_time is not None and report.end_time is not None
+        else "—"
+    )
+    top_metrics = st.columns(3)
+    top_metrics[0].metric(t(language, "quality.rows"), f"{report.row_count:,}")
+    top_metrics[1].metric(t(language, "quality.time_span"), time_span)
+    top_metrics[2].metric(t(language, "quality.interval"), interval)
+    lower_metrics = st.columns(2)
+    lower_metrics[0].metric(
+        t(language, "quality.score"), f"{report.score:.1f}/100"
+    )
+    lower_metrics[1].metric(
         t(language, "quality.ready_rules"),
         f"{ready_count}/{len(report.readiness)}",
     )

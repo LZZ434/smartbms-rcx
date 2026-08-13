@@ -10,7 +10,7 @@ class ReleaseInfoTests(unittest.TestCase):
         info = release_info()
 
         self.assertEqual(info.version, "1.0.0")
-        self.assertEqual(info.test_count, 99)
+        self.assertEqual(info.test_count, 101)
         self.assertEqual(
             PUBLIC_REPOSITORY_URL,
             "https://github.com/LZZ434/smartbms-rcx",

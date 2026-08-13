@@ -56,9 +56,9 @@ Each rule is admitted independently. A rule is eligible only if all required col
 | `sensor_bias` | `timestamp`, `east_temp_measured_c`, `east_temp_reference_c` |
 | `stuck_valve` | `timestamp`, `cooling_cmd_east`, `valve_east`, `east_temp_measured_c` |
 | `fouled_filter` | `timestamp`, `airflow_cmd_east`, `airflow_east`, `fan_power_kw`, `expected_fan_power_kw` |
-| `after_hours_operation` | `timestamp`, `occupied`, `cooling_cmd_east`, `hvac_power_kw` |
+| `after_hours_operation` | `timestamp`, `occupied`, `preconditioning_authorized`, `cooling_cmd_east`, `hvac_power_kw` |
 
-Optional `cooling_cmd_west` and `preconditioning_authorized` improve after-hours context. Their absence does not invent data: the existing rule uses its documented east-command and unauthorized-preconditioning fallback semantics.
+Optional `cooling_cmd_west` improves after-hours context. `preconditioning_authorized` is mandatory because treating an unknown state as false could misclassify legitimate pre-cooling as waste.
 
 ## Export schemas
 

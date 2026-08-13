@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
+import csv
 from io import BytesIO
+from io import StringIO
 from numbers import Real
 from typing import Any
 
@@ -200,8 +203,26 @@ def ingest_csv_bytes(
             f"uploaded CSV exceeds {max_bytes} bytes",
         )
     try:
+        text = payload.decode("utf-8-sig")
+        header = next(csv.reader(StringIO(text), strict=True))
+        duplicates = sorted(
+            name for name, count in Counter(header).items() if count > 1
+        )
+        if duplicates:
+            raise TrendIngestionError(
+                "duplicate_columns",
+                f"uploaded CSV has duplicate columns: {duplicates}",
+            )
         frame = pd.read_csv(BytesIO(payload), encoding="utf-8-sig")
-    except (pd.errors.ParserError, pd.errors.EmptyDataError, UnicodeDecodeError) as exc:
+    except TrendIngestionError:
+        raise
+    except (
+        csv.Error,
+        StopIteration,
+        pd.errors.ParserError,
+        pd.errors.EmptyDataError,
+        UnicodeDecodeError,
+    ) as exc:
         raise TrendIngestionError(
             "malformed_csv",
             "uploaded data is not a valid UTF-8 CSV",

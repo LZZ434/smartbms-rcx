@@ -43,6 +43,29 @@ class ScreeningTests(unittest.TestCase):
         self.assertEqual(result.findings, ())
         self.assertFalse(any(item.eligible for item in result.quality.readiness))
 
+    def test_unknown_preconditioning_state_blocks_after_hours_rule(self):
+        for frame in (
+            self.bundle.baseline.trends.drop(
+                columns=["preconditioning_authorized"]
+            ),
+            self.bundle.baseline.trends.assign(
+                preconditioning_authorized=lambda value: value[
+                    "preconditioning_authorized"
+                ].mask(value.index == 0)
+            ),
+        ):
+            with self.subTest(columns=tuple(frame.columns)):
+                result = screen_trends(frame)
+                readiness = {
+                    item.category: item for item in result.quality.readiness
+                }
+
+                self.assertFalse(readiness["after_hours_operation"].eligible)
+                self.assertNotIn(
+                    "after_hours_operation",
+                    {item.category for item in result.findings},
+                )
+
     def test_export_frames_keep_stable_english_schema(self):
         result = screen_trends(self.bundle.baseline.trends)
 

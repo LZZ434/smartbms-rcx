@@ -104,7 +104,7 @@ smartbms/scenarios.py    全场景编排
 smartbms/i18n.py         中英文界面与工程展示翻译
 smartbms/reporting.py    报告与 CSV 导出
 app.py                   七页中英双语 Streamlit 前端
-tests/                   99 个自动化测试
+tests/                   101 个自动化测试
 ```
 
 ## 结果复算

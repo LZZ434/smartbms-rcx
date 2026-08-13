@@ -122,7 +122,7 @@ smartbms/
   i18n.py           Chinese/English UI and engineering-display localization
   reporting.py      HTML, Markdown, CSV, and manifest exports
 app.py               seven-page bilingual Streamlit interface
-tests/               99 unit/integration/release/smoke tests
+tests/               101 unit/integration/release/smoke tests
 docs/                design, architecture, learning, résumé, and interview assets
 scripts/             one-command portfolio export
 ```

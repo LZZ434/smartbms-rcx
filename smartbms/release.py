@@ -9,7 +9,7 @@ from smartbms import __version__
 
 
 PUBLIC_REPOSITORY_URL = "https://github.com/LZZ434/smartbms-rcx"
-VERIFIED_TEST_COUNT = 99
+VERIFIED_TEST_COUNT = 101
 
 
 @dataclass(frozen=True)

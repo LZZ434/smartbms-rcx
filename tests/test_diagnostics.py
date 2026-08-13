@@ -21,6 +21,7 @@ def diagnostic_fixture(category: str) -> pd.DataFrame:
             "expected_fan_power_kw": np.full(rows, 2.5),
             "hvac_power_kw": np.full(rows, 5.0),
             "occupied": np.full(rows, True),
+            "preconditioning_authorized": np.full(rows, False),
         }
     )
     if category == "sensor_bias":

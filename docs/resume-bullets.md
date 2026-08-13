@@ -12,7 +12,7 @@
 - Reduced simulated weekly HVAC energy from **844.288 to 796.814 kWh (5.623%)** while keeping **100% of occupied zone-samples within 22–26 °C** in the fixed test scenario; reported the result as model-specific rather than real-building savings.
 - Detected **4/4 injected faults** (sensor bias, stuck valve, fouled filter, and after-hours operation) after four persistent 15-minute samples, with **45-minute delay and zero unexpected findings**; exposed evidence, corrective actions, alarms, simulated BACnet/Modbus metadata, and CSV/HTML reports.
 - Added strict in-memory BMS CSV ingestion, **8 deterministic data-quality checks**, and rule-specific RCx admission so missing or unreliable inputs cannot be mislabeled as a healthy result; published a bilingual seven-page portfolio app with Python 3.11/3.12 CI.
-- Wrote **99 unit, integration, export, localization, release, and dashboard-smoke tests** covering thermal response, control bounds/fallback, fault effects, diagnostic persistence, data quality, KPI arithmetic, deterministic exports, bilingual reports, and two-language page rendering.
+- Wrote **101 unit, integration, export, localization, release, and dashboard-smoke tests** covering thermal response, control bounds/fallback, fault effects, diagnostic persistence, data quality, KPI arithmetic, deterministic exports, bilingual reports, and two-language page rendering.
 
 Use the best three bullets for a one-page résumé. Keep the fourth for testing/software-heavy roles.
 
@@ -22,7 +22,7 @@ Use the best three bullets for a one-page résumé. Keep the fourth for testing/
 - 在固定合成周场景中，将 HVAC 能耗由 **844.288 kWh 降至 796.814 kWh（5.623%）**，同时保持占用时区温样本 **100% 位于 22–26 °C**；明确说明结果只适用于该仿真模型。
 - 对传感器偏置、阀门卡滞、过滤器堵塞和非工作时段运行实现持续性诊断，固定场景下 **4/4 检出、延迟 45 分钟、额外误报 0 项**，并输出证据、整改建议、报警和模拟 BACnet/Modbus 点表。
 - 增加严格的内存 BMS CSV 导入、**8 项确定性数据质量检查**和按规则 RCx 准入，避免把数据不足误报为设备健康；发布中英双语七页作品集应用，并配置 Python 3.11/3.12 CI。
-- 编写 **99 个自动化测试**，覆盖热响应、控制边界/回退、故障影响、诊断持续性、数据质量、指标复算、双语报告、发布资产和两种语言的页面渲染。
+- 编写 **101 个自动化测试**，覆盖热响应、控制边界/回退、故障影响、诊断持续性、数据质量、指标复算、双语报告、发布资产和两种语言的页面渲染。
 
 ## Role-specific emphasis
 

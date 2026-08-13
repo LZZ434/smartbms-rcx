@@ -64,7 +64,13 @@ REQUIRED_COLUMNS_BY_CATEGORY = {
         }
     ),
     "after_hours_operation": frozenset(
-        {"timestamp", "occupied", "cooling_cmd_east", "hvac_power_kw"}
+        {
+            "timestamp",
+            "occupied",
+            "preconditioning_authorized",
+            "cooling_cmd_east",
+            "hvac_power_kw",
+        }
     ),
 }
 
@@ -213,10 +219,7 @@ def run_diagnostics(
 
     if "after_hours_operation" in selected:
         west_command = trends.get("cooling_cmd_west", trends["cooling_cmd_east"])
-        authorized_preconditioning = trends.get(
-            "preconditioning_authorized",
-            pd.Series(False, index=trends.index),
-        ).astype(bool)
+        authorized_preconditioning = trends["preconditioning_authorized"].astype(bool)
         largest_command = pd.concat(
             [trends["cooling_cmd_east"], west_command], axis=1
         ).max(axis=1)

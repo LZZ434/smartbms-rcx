@@ -60,11 +60,11 @@ Keep `generated/scenario-comparison.csv` open as arithmetic evidence. Use the de
 
 ### 2:55–3:00｜收尾
 
-“项目有 99 个自动化测试和可复算 CSV，包括严格导入、质量门控、中英文七页渲染和双语报告测试。拿到真实数据后，我仍会先确认点位语义、标定和技术人员反馈，再评估有联锁的控制写入。”
+“项目有 101 个自动化测试和可复算 CSV，包括严格导入、质量门控、中英文七页渲染和双语报告测试。拿到真实数据后，我仍会先确认点位语义、标定和技术人员反馈，再评估有联锁的控制写入。”
 
 ## 45-second English version
 
-“SmartBMS-RCx is a public synthetic proof of concept for building HVAC controls and retro-commissioning. It combines a two-zone RC model, bounded predictive supervision, four injected faults, strict in-memory CSV ingestion, eight data-quality checks, rule-specific diagnostic admission, and a bilingual seven-page dashboard. In the fixed scenario, simulated energy decreased from 844.288 to 796.814 kilowatt-hours—5.623%—with 100% occupied comfort, while all four injected faults were detected after 45 minutes. These are model-specific results, not real-building savings or live BACnet deployment. The repository includes 99 automated tests and reproducible interval CSVs.”
+“SmartBMS-RCx is a public synthetic proof of concept for building HVAC controls and retro-commissioning. It combines a two-zone RC model, bounded predictive supervision, four injected faults, strict in-memory CSV ingestion, eight data-quality checks, rule-specific diagnostic admission, and a bilingual seven-page dashboard. In the fixed scenario, simulated energy decreased from 844.288 to 796.814 kilowatt-hours—5.623%—with 100% occupied comfort, while all four injected faults were detected after 45 minutes. These are model-specific results, not real-building savings or live BACnet deployment. The repository includes 101 automated tests and reproducible interval CSVs.”
 
 ## If the interviewer interrupts
 
