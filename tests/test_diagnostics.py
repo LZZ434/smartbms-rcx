@@ -96,6 +96,33 @@ class DiagnosticRuleTests(unittest.TestCase):
             delta=0.002,
         )
 
+    def test_selected_rule_requires_only_its_own_columns(self):
+        trends = diagnostic_fixture("sensor_bias")[
+            ["timestamp", "east_temp_measured_c", "east_temp_reference_c"]
+        ]
+
+        findings = run_diagnostics(trends, categories=("sensor_bias",))
+
+        self.assertEqual([item.category for item in findings], ["sensor_bias"])
+
+    def test_unselected_fault_rule_does_not_run(self):
+        findings = run_diagnostics(
+            diagnostic_fixture("stuck_valve"),
+            categories=("sensor_bias",),
+        )
+
+        self.assertEqual(findings, [])
+
+    def test_empty_rule_selection_returns_no_findings(self):
+        self.assertEqual(run_diagnostics(pd.DataFrame(), categories=()), [])
+
+    def test_unknown_rule_selection_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "unsupported diagnostic categories"):
+            run_diagnostics(
+                diagnostic_fixture("healthy"),
+                categories=("unknown",),
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
