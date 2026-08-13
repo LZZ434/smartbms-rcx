@@ -28,6 +28,7 @@ from smartbms.i18n import (
     t,
 )
 from smartbms.reporting import render_html_report, render_markdown_report
+from smartbms.release import release_info
 from smartbms.scenarios import ScenarioBundle, ScenarioRun, run_portfolio_scenarios
 from smartbms.screening import screen_trends
 from smartbms.trend_io import (
@@ -101,6 +102,8 @@ def _page_header(page_id: str, subtitle_key: str, language: str) -> None:
 
 def render_overview(bundle: ScenarioBundle, language: str) -> None:
     _page_header("overview", "overview.subtitle", language)
+    release = release_info()
+    st.success(t(language, "overview.badge"))
     st.warning(t(language, "overview.warning"))
     optimized_row = bundle.comparison.loc[bundle.comparison.scenario == "optimized"].iloc[0]
     cols = st.columns(4)
@@ -132,6 +135,36 @@ def render_overview(bundle: ScenarioBundle, language: str) -> None:
 
     with st.expander(t(language, "overview.inside"), expanded=True):
         st.markdown("\n".join(f"- {t(language, f'overview.item.{position}')}" for position in range(1, 6)))
+    st.subheader(t(language, "overview.demo_title"))
+    st.markdown(
+        "\n".join(
+            f"{position}. {t(language, f'overview.demo.{position}')}"
+            for position in range(1, 4)
+        )
+    )
+    st.subheader(t(language, "overview.evidence_title"))
+    st.markdown(
+        "\n".join(
+            (
+                f"- {t(language, 'overview.evidence.tests', count=release.test_count)}",
+                f"- {t(language, 'overview.evidence.seed')}",
+                f"- {t(language, 'overview.evidence.boundary')}",
+            )
+        )
+    )
+    st.link_button(
+        t(language, "overview.repository"),
+        release.repository_url,
+        width="stretch",
+    )
+    st.caption(
+        t(
+            language,
+            "overview.release",
+            version=release.version,
+            commit=release.commit,
+        )
+    )
     left, right = st.columns(2)
     left.download_button(
         t(language, "download.html"),

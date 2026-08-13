@@ -158,6 +158,29 @@ class DashboardSmokeTests(unittest.TestCase):
             ["Download HTML technical report", "Download Markdown summary"],
         )
 
+    def test_overview_shows_recruiter_evidence_in_both_languages(self):
+        expected = {
+            "zh": ("合成工程 PoC", "三分钟演示路线", "版本 1.0.0"),
+            "en": ("Synthetic engineering PoC", "Three-minute demo path", "Release 1.0.0"),
+        }
+        for language, phrases in expected.items():
+            with self.subTest(language=language):
+                app = _run_page(language, "overview")
+                self.assertFalse(app.exception)
+                rendered = "\n".join(
+                    item.value
+                    for group in (
+                        app.success,
+                        app.subheader,
+                        app.markdown,
+                        app.caption,
+                    )
+                    for item in group
+                    if isinstance(item.value, str)
+                )
+                for phrase in phrases:
+                    self.assertIn(phrase, rendered)
+
 
 if __name__ == "__main__":
     unittest.main()
