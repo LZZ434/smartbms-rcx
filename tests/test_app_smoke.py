@@ -184,6 +184,8 @@ class DashboardSmokeTests(unittest.TestCase):
                 )
                 for phrase in phrases:
                     self.assertIn(phrase, rendered)
+                self.assertNotIn("build local", rendered)
+                self.assertNotIn("构建 local", rendered)
 
 
 if __name__ == "__main__":
